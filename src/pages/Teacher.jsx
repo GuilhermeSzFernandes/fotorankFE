@@ -42,7 +42,7 @@ function StarRating({ score, onChange, disabled }) {
 }
 
 // ── Lightbox com navegação e avaliação ────────────────────────────────────────
-function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChange, onCommentChange, onCommentSave, onClose }) {
+function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChange, onCommentChange, onCommentSave, onUngrade, onClose }) {
   const [idx, setIdx] = useState(initialIndex);
 
   // Fecha se não há mais fotos; ajusta índice se a lista encolheu
@@ -170,11 +170,20 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
             )}
           </div>
 
-          {/* Indicador de salvo */}
+          {/* Indicador de salvo + desavaliar */}
           {score != null && !saving[photo.id] && (
-            <div className="flex items-center gap-2 text-2xs text-amber-400/70 font-mono">
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-              avaliada · {score}/10
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-2xs text-amber-400/70 font-mono">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                avaliada · {score}/10
+              </div>
+              <button
+                onClick={() => onUngrade(photo.id)}
+                className="text-2xs text-ink-muted hover:text-red-400 font-mono transition-colors"
+                title="Remover avaliação"
+              >
+                desavaliar
+              </button>
             </div>
           )}
           {saving[photo.id] && (
@@ -204,7 +213,7 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
 }
 
 // ── Card de foto ───────────────────────────────────────────────────────────────
-function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChange, onCommentSave, onExpand, index }) {
+function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChange, onCommentSave, onUngrade, onExpand, index }) {
   const graded = score != null;
   const commentDirty = comment !== (photo.myGrade?.comment ?? '');
 
@@ -292,9 +301,18 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
           )}
         </div>
 
-        {/* Estado de salvamento */}
-        {saving && (
+        {/* Estado de salvamento / desavaliar */}
+        {saving ? (
           <p className="text-2xs text-ink-muted font-mono">salvando…</p>
+        ) : score != null && (
+          <div className="flex justify-end">
+            <button
+              onClick={() => onUngrade(photo.id)}
+              className="text-2xs text-ink-muted hover:text-red-400 font-mono transition-colors"
+            >
+              desavaliar
+            </button>
+          </div>
         )}
       </div>
     </div>
@@ -399,6 +417,20 @@ export default function Teacher() {
     saveGrade(photoId, scores[photoId], comments[photoId] ?? '');
   }
 
+  async function handleUngrade(photoId) {
+    setSaving((s) => ({ ...s, [photoId]: true }));
+    try {
+      await axios.delete(`/api/grades/${photoId}`);
+      setScores((s) => { const n = { ...s }; delete n[photoId]; return n; });
+      setComments((c) => { const n = { ...c }; delete n[photoId]; return n; });
+      setPhotos((prev) =>
+        prev.map((p) => p.id === photoId ? { ...p, myGrade: null } : p)
+      );
+    } finally {
+      setSaving((s) => ({ ...s, [photoId]: false }));
+    }
+  }
+
   function handleFilterChange(f) {
     setFilter(f);
     setPage(0);
@@ -436,6 +468,7 @@ export default function Teacher() {
           onScoreChange={handleScoreChange}
           onCommentChange={handleCommentChange}
           onCommentSave={handleCommentSave}
+          onUngrade={handleUngrade}
           onClose={() => setLightboxIdx(null)}
         />
       )}}
@@ -510,6 +543,7 @@ export default function Teacher() {
                   onScoreChange={handleScoreChange}
                   onCommentChange={handleCommentChange}
                   onCommentSave={handleCommentSave}
+                  onUngrade={handleUngrade}
                   onExpand={(p) => setLightboxIdx(filtered.findIndex((f) => f.id === p.id))}
                 />
               ))}
