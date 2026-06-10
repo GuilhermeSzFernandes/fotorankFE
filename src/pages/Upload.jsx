@@ -2,6 +2,48 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 
+function PhotoStatus({ photo }) {
+  const comments = photo.feedbacks?.filter((f) => f.comment?.trim()) ?? [];
+
+  if (photo.gradeCount === 0) {
+    return (
+      <div className="rounded-sm border border-line/60 bg-surface px-3 py-3 flex items-center gap-2">
+        <div className="w-1.5 h-1.5 rounded-full bg-ink-ghost/30 shrink-0" />
+        <span className="text-2xs text-ink-muted font-mono">aguardando avaliação</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-sm border border-amber-500/25 bg-amber-500/5 px-3 py-3 space-y-2.5">
+      {/* Nota em destaque */}
+      <div className="flex items-baseline justify-between">
+        <div className="flex items-baseline gap-1">
+          <span className="font-display text-3xl italic text-ink leading-none" style={{ letterSpacing: '-0.03em' }}>
+            {photo.avgScore?.toFixed(1)}
+          </span>
+          <span className="text-xs text-ink-muted font-mono">/10</span>
+        </div>
+        <span className="text-2xs text-ink-muted font-mono">
+          {photo.gradeCount} avaliação{photo.gradeCount !== 1 ? 'ões' : ''}
+        </span>
+      </div>
+
+      {/* Comentários */}
+      {comments.length > 0 && (
+        <div className="space-y-2 pt-2 border-t border-amber-500/20">
+          {comments.map((f, j) => (
+            <div key={j} className="flex gap-2">
+              <span className="text-2xs text-amber-400/70 font-mono shrink-0 mt-0.5">{f.score}·</span>
+              <p className="text-2xs text-ink-secondary leading-relaxed">{f.comment}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function GallerySlot({ photo, pending, isUploadSlot, uploading, onFile, onRemovePending, onDeletePhoto, fileRef, index }) {
   // Foto já enviada definitivamente
   if (photo) {
@@ -240,47 +282,25 @@ export default function Upload() {
 
       <div className="grid grid-cols-3 gap-3 mb-6">
         {[0, 1, 2].map((i) => (
-          <GallerySlot
-            key={i}
-            index={i}
-            photo={photos[i]}
-            pending={!photos[i] && i === uploadSlotIndex ? pending : null}
-            isUploadSlot={!photos[i] && i === uploadSlotIndex && !pending && remaining > 0}
-            uploading={uploading}
-            onFile={handleFileSelect}
-            onRemovePending={handleRemovePending}
-            onDeletePhoto={handleDeletePhoto}
-            fileRef={i === uploadSlotIndex ? fileRef : undefined}
-          />
+          <div key={i} className="flex flex-col gap-2">
+            <GallerySlot
+              index={i}
+              photo={photos[i]}
+              pending={!photos[i] && i === uploadSlotIndex ? pending : null}
+              isUploadSlot={!photos[i] && i === uploadSlotIndex && !pending && remaining > 0}
+              uploading={uploading}
+              onFile={handleFileSelect}
+              onRemovePending={handleRemovePending}
+              onDeletePhoto={handleDeletePhoto}
+              fileRef={i === uploadSlotIndex ? fileRef : undefined}
+            />
+
+            {photos[i] && (
+              <PhotoStatus photo={photos[i]} />
+            )}
+          </div>
         ))}
       </div>
-
-      {/* Status de avaliação por foto */}
-      {photos.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {[0, 1, 2].map((i) => {
-            const photo = photos[i];
-            if (!photo) return <div key={i} />;
-            return (
-              <div key={i} className="px-1">
-                {photo.gradeCount === 0 ? (
-                  <p className="text-2xs text-ink-ghost/40 font-mono text-center">não avaliada</p>
-                ) : (
-                  <div className="text-center">
-                    <p className="font-display text-2xl italic text-ink leading-none" style={{ letterSpacing: '-0.02em' }}>
-                      {photo.avgScore?.toFixed(1)}
-                      <span className="text-xs text-ink-muted not-italic font-mono">/10</span>
-                    </p>
-                    <p className="text-2xs text-ink-muted font-mono mt-0.5">
-                      {photo.gradeCount} avaliação{photo.gradeCount !== 1 ? 'ões' : ''}
-                    </p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
 
       {/* Ações da pré-visualização */}
       {pending && (

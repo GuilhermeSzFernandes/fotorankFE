@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Avatar from '../components/Avatar';
 
@@ -6,10 +7,12 @@ const MEDAL = ['🥇', '🥈', '🥉'];
 const PER_PAGE = 10;
 
 function RankingRow({ entry, position, delay }) {
+  const navigate = useNavigate();
   return (
     <div
-      className="flex items-center gap-5 px-5 py-5 border-b border-line last:border-0 hover:bg-surface-raised/50 transition-colors duration-150"
+      className="flex items-center gap-5 px-5 py-5 border-b border-line last:border-0 hover:bg-surface-raised/50 transition-colors duration-150 cursor-pointer"
       style={{ animation: `fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) ${delay}ms both` }}
+      onClick={() => navigate(`/perfil/${entry.userId}`)}
     >
       <div className="w-8 shrink-0 text-center">
         {position <= 3

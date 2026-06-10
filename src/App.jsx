@@ -12,6 +12,7 @@ import Teacher from './pages/Teacher';
 import Ranking from './pages/Ranking';
 import Admin from './pages/Admin';
 import Settings from './pages/Settings';
+import UserProfile from './pages/UserProfile';
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
               <Route path="/forgot-password"   element={<ForgotPassword />} />
               <Route path="/reset-password"    element={<ResetPassword />} />
               <Route path="/ranking"           element={<Ranking />} />
+              <Route path="/perfil/:userId"   element={<UserProfile />} />
 
               <Route path="/upload" element={
                 <ProtectedRoute roles={['participant']}><Upload /></ProtectedRoute>
