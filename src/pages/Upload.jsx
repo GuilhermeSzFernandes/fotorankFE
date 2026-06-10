@@ -146,11 +146,28 @@ export default function Upload() {
   function handleFileSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
-    if (pending) URL.revokeObjectURL(pending.previewUrl);
-    setPending({ file, previewUrl: URL.createObjectURL(file) });
     setError('');
     setSuccess('');
-    if (fileRef.current) fileRef.current.value = '';
+
+    const previewUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      if (img.naturalWidth < 800 || img.naturalHeight < 600) {
+        URL.revokeObjectURL(previewUrl);
+        setError(`Resolução mínima é 800×600 px. Sua foto tem ${img.naturalWidth}×${img.naturalHeight} px.`);
+        if (fileRef.current) fileRef.current.value = '';
+        return;
+      }
+      if (pending) URL.revokeObjectURL(pending.previewUrl);
+      setPending({ file, previewUrl });
+      if (fileRef.current) fileRef.current.value = '';
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(previewUrl);
+      setError('Não foi possível ler a imagem.');
+      if (fileRef.current) fileRef.current.value = '';
+    };
+    img.src = previewUrl;
   }
 
   function handleRemovePending() {
@@ -265,7 +282,7 @@ export default function Upload() {
       )}
 
       <div className="mt-14 pt-6 border-t border-line enter-5">
-        <p className="text-2xs text-ink-muted">JPEG · PNG · WebP · máx. 25 MB por foto</p>
+        <p className="text-2xs text-ink-muted">JPEG · PNG · WebP · máx. 30 MB · mín. 800×600 px</p>
       </div>
 
     </div>
