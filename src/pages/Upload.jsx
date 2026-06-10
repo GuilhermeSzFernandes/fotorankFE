@@ -16,7 +16,6 @@ function PhotoStatus({ photo }) {
 
   return (
     <div className="rounded-sm border border-amber-500/25 bg-amber-500/5 px-3 py-3 space-y-2.5">
-      {/* Nota em destaque */}
       <div className="flex items-baseline justify-between">
         <div className="flex items-baseline gap-1">
           <span className="font-display text-3xl italic text-ink leading-none" style={{ letterSpacing: '-0.03em' }}>
@@ -28,8 +27,6 @@ function PhotoStatus({ photo }) {
           {photo.gradeCount} avaliação{photo.gradeCount !== 1 ? 'ões' : ''}
         </span>
       </div>
-
-      {/* Comentários */}
       {comments.length > 0 && (
         <div className="space-y-2 pt-2 border-t border-amber-500/20">
           {comments.map((f, j) => (
@@ -44,8 +41,8 @@ function PhotoStatus({ photo }) {
   );
 }
 
-function GallerySlot({ photo, pending, isUploadSlot, uploading, onFile, onRemovePending, onDeletePhoto, fileRef, index }) {
-  // Foto já enviada definitivamente
+function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemovePending, onDeletePhoto, fileRef, index }) {
+  // Foto já confirmada
   if (photo) {
     const canDelete = photo.gradeCount === 0;
     return (
@@ -54,19 +51,13 @@ function GallerySlot({ photo, pending, isUploadSlot, uploading, onFile, onRemove
         style={{ animation: `fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) ${index * 80}ms both` }}
       >
         <img src={photo.url} alt={photo.originalName} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-
-        {/* Overlay com info — só aparece no hover em desktop */}
         <div className="absolute inset-0 bg-base/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 pointer-events-none">
           <p className="text-2xs text-ink/70 font-mono truncate">{photo.originalName}</p>
           <p className="text-2xs text-ink-secondary font-mono">{new Date(photo.createdAt).toLocaleDateString('pt-BR')}</p>
         </div>
-
-        {/* Número do slot */}
         <div className="absolute top-2 left-2 pointer-events-none">
           <span className="font-mono text-2xs text-white/40">0{index + 1}</span>
         </div>
-
-        {/* Botão de remover — sempre visível no celular, hover em desktop */}
         {canDelete ? (
           <button
             onClick={() => onDeletePhoto(photo.id)}
@@ -94,80 +85,70 @@ function GallerySlot({ photo, pending, isUploadSlot, uploading, onFile, onRemove
     );
   }
 
-  // Pré-visualização pendente (ainda não enviada)
+  // Preview pendente
   if (pending) {
     return (
-      <div
-        className="relative aspect-square overflow-hidden rounded-sm border border-ink-muted/40 group"
+      <div className="relative aspect-square overflow-hidden rounded-sm border border-ink-muted/40 group"
         style={{ animation: `fadeUp 0.3s cubic-bezier(0.16,1,0.3,1) both` }}
       >
         <img src={pending.previewUrl} alt="pré-visualização" className="w-full h-full object-cover" />
-        {/* Overlay com badge "aguardando" */}
-        <div className="absolute inset-0 bg-base/40 flex flex-col justify-between p-2">
+        {uploadingThis && (
+          <div className="absolute inset-0 bg-base/60 flex items-center justify-center">
+            <svg className="animate-spin text-white" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-base/40 flex flex-col justify-between p-2 pointer-events-none">
           <div className="flex justify-between items-start">
             <span className="font-mono text-2xs text-white/40">0{index + 1}</span>
-            <button
-              onClick={onRemovePending}
-              className="w-6 h-6 rounded-full bg-base/80 border border-line flex items-center justify-center text-ink-muted hover:text-ink hover:border-ink-secondary transition-colors"
-              title="Remover"
-            >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
           </div>
           <span className="text-2xs font-mono text-white/50 truncate">{pending.file.name}</span>
         </div>
+        {!uploadingThis && (
+          <button
+            onClick={onRemovePending}
+            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-base/80 border border-line flex items-center justify-center text-ink-muted hover:text-ink hover:border-ink-secondary transition-colors"
+            title="Remover"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        )}
       </div>
     );
   }
 
-  // Slot de envio disponível
-  if (isUploadSlot) {
-    return (
-      <label
-        className="relative aspect-square rounded-sm border border-dashed border-line-strong hover:border-ink-muted transition-colors duration-200 cursor-pointer flex flex-col items-center justify-center gap-3 group"
-        style={{ animation: `fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) ${index * 80}ms both` }}
-      >
-        <div className="text-ink-muted group-hover:text-ink-secondary transition-colors duration-200">
-          {uploading ? (
-            <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-            </svg>
-          ) : (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-          )}
-        </div>
-        <p className="text-2xs text-ink-muted group-hover:text-ink-secondary transition-colors font-mono">
-          {uploading ? 'enviando…' : 'escolher foto'}
-        </p>
-        <span className="absolute top-2 left-2 font-mono text-2xs text-ink-ghost/40">0{index + 1}</span>
-        <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} disabled={uploading} />
-      </label>
-    );
-  }
-
-  // Slot bloqueado
+  // Slot vazio — clicável
   return (
-    <div
-      className="aspect-square rounded-sm border border-line/40 flex items-center justify-center"
+    <label
+      className="relative aspect-square rounded-sm border border-dashed border-line-strong hover:border-ink-muted transition-colors duration-200 cursor-pointer flex flex-col items-center justify-center gap-3 group"
       style={{ animation: `fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) ${index * 80}ms both` }}
     >
-      <span className="font-mono text-2xs text-ink-ghost/30">0{index + 1}</span>
-    </div>
+      <div className="text-ink-muted group-hover:text-ink-secondary transition-colors duration-200">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      </div>
+      <p className="text-2xs text-ink-muted group-hover:text-ink-secondary transition-colors font-mono">escolher foto</p>
+      <span className="absolute top-2 left-2 font-mono text-2xs text-ink-ghost/40">0{index + 1}</span>
+      <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} disabled={uploading} />
+    </label>
   );
 }
 
 export default function Upload() {
   const { user } = useAuth();
-  const [photos, setPhotos] = useState([]);
-  const [pending, setPending] = useState(null); // { file, previewUrl }
+  const [photos, setPhotos]   = useState([]);
+  // pendings: { [slotIndex]: { file, previewUrl } }
+  const [pendings, setPendings] = useState({});
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
+  // qual slot está sendo enviado agora
+  const [uploadingSlot, setUploadingSlot] = useState(null);
+  const [error, setError]   = useState('');
   const [success, setSuccess] = useState('');
-  const fileRef = useRef();
+  const fileRefs = [useRef(), useRef(), useRef()];
 
   async function loadPhotos() {
     try {
@@ -180,12 +161,14 @@ export default function Upload() {
 
   useEffect(() => { loadPhotos(); }, []);
 
-  // Limpa a URL de objeto ao desmontar ou trocar pending
+  // Revoga URLs ao desmontar
   useEffect(() => {
-    return () => { if (pending) URL.revokeObjectURL(pending.previewUrl); };
-  }, [pending]);
+    return () => {
+      Object.values(pendings).forEach((p) => URL.revokeObjectURL(p.previewUrl));
+    };
+  }, []);
 
-  function handleFileSelect(e) {
+  function handleFileSelect(slotIndex, e) {
     const file = e.target.files[0];
     if (!file) return;
     setError('');
@@ -197,25 +180,32 @@ export default function Upload() {
       if (img.naturalWidth < 800 || img.naturalHeight < 600) {
         URL.revokeObjectURL(previewUrl);
         setError(`Resolução mínima é 800×600 px. Sua foto tem ${img.naturalWidth}×${img.naturalHeight} px.`);
-        if (fileRef.current) fileRef.current.value = '';
+        if (fileRefs[slotIndex].current) fileRefs[slotIndex].current.value = '';
         return;
       }
-      if (pending) URL.revokeObjectURL(pending.previewUrl);
-      setPending({ file, previewUrl });
-      if (fileRef.current) fileRef.current.value = '';
+      // Revoga preview anterior deste slot, se existir
+      setPendings((prev) => {
+        if (prev[slotIndex]) URL.revokeObjectURL(prev[slotIndex].previewUrl);
+        return { ...prev, [slotIndex]: { file, previewUrl } };
+      });
+      if (fileRefs[slotIndex].current) fileRefs[slotIndex].current.value = '';
     };
     img.onerror = () => {
       URL.revokeObjectURL(previewUrl);
       setError('Não foi possível ler a imagem.');
-      if (fileRef.current) fileRef.current.value = '';
+      if (fileRefs[slotIndex].current) fileRefs[slotIndex].current.value = '';
     };
     img.src = previewUrl;
   }
 
-  function handleRemovePending() {
-    if (pending) URL.revokeObjectURL(pending.previewUrl);
-    setPending(null);
-    if (fileRef.current) fileRef.current.value = '';
+  function handleRemovePending(slotIndex) {
+    setPendings((prev) => {
+      if (prev[slotIndex]) URL.revokeObjectURL(prev[slotIndex].previewUrl);
+      const next = { ...prev };
+      delete next[slotIndex];
+      return next;
+    });
+    if (fileRefs[slotIndex].current) fileRefs[slotIndex].current.value = '';
   }
 
   async function handleDeletePhoto(photoId) {
@@ -232,27 +222,42 @@ export default function Upload() {
   }
 
   async function handleConfirmUpload() {
-    if (!pending) return;
+    const slots = Object.keys(pendings).map(Number).sort();
+    if (slots.length === 0) return;
     setError('');
     setSuccess('');
     setUploading(true);
-    const fd = new FormData();
-    fd.append('photo', pending.file);
-    try {
-      await axios.post('/api/photos', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      URL.revokeObjectURL(pending.previewUrl);
-      setPending(null);
-      setSuccess('Foto adicionada ao portfólio.');
+    let sent = 0;
+
+    for (const slot of slots) {
+      const { file, previewUrl } = pendings[slot];
+      setUploadingSlot(slot);
+      const fd = new FormData();
+      fd.append('photo', file);
+      try {
+        await axios.post('/api/photos', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+        URL.revokeObjectURL(previewUrl);
+        setPendings((prev) => {
+          const next = { ...prev };
+          delete next[slot];
+          return next;
+        });
+        sent++;
+      } catch (err) {
+        setError(err.response?.data?.message || `Erro ao enviar foto ${slot + 1}.`);
+        break;
+      }
+    }
+
+    setUploading(false);
+    setUploadingSlot(null);
+    if (sent > 0) {
+      setSuccess(`${sent} foto${sent > 1 ? 's adicionadas' : ' adicionada'} ao portfólio.`);
       loadPhotos();
-    } catch (err) {
-      setError(err.response?.data?.message || 'Erro ao enviar foto.');
-    } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = '';
     }
   }
 
-  const uploadSlotIndex = photos.length; // próximo slot disponível
+  const pendingCount = Object.keys(pendings).length;
   const remaining = 3 - photos.length;
 
   return (
@@ -286,43 +291,45 @@ export default function Upload() {
             <GallerySlot
               index={i}
               photo={photos[i]}
-              pending={!photos[i] && i === uploadSlotIndex ? pending : null}
-              isUploadSlot={!photos[i] && i === uploadSlotIndex && !pending && remaining > 0}
+              pending={!photos[i] ? pendings[i] ?? null : null}
               uploading={uploading}
-              onFile={handleFileSelect}
-              onRemovePending={handleRemovePending}
+              uploadingThis={uploadingSlot === i}
+              onFile={(e) => handleFileSelect(i, e)}
+              onRemovePending={() => handleRemovePending(i)}
               onDeletePhoto={handleDeletePhoto}
-              fileRef={i === uploadSlotIndex ? fileRef : undefined}
+              fileRef={fileRefs[i]}
             />
-
-            {photos[i] && (
-              <PhotoStatus photo={photos[i]} />
-            )}
+            {photos[i] && <PhotoStatus photo={photos[i]} />}
           </div>
         ))}
       </div>
 
-      {/* Ações da pré-visualização */}
-      {pending && (
+      {/* Ações */}
+      {pendingCount > 0 && (
         <div className="flex items-center gap-3 mb-6 enter-1">
           <button
             onClick={handleConfirmUpload}
             disabled={uploading}
             className="btn-primary flex-1"
           >
-            {uploading ? 'Enviando…' : 'Confirmar envio'}
+            {uploading
+              ? `Enviando ${uploadingSlot + 1} de ${pendingCount}…`
+              : `Enviar ${pendingCount} foto${pendingCount > 1 ? 's' : ''}`}
           </button>
           <button
-            onClick={handleRemovePending}
+            onClick={() => {
+              Object.values(pendings).forEach((p) => URL.revokeObjectURL(p.previewUrl));
+              setPendings({});
+            }}
             disabled={uploading}
             className="px-4 py-2 text-xs text-ink-muted border border-line rounded-sm hover:border-ink-secondary hover:text-ink-secondary transition-colors"
           >
-            Cancelar
+            Cancelar tudo
           </button>
         </div>
       )}
 
-      {remaining === 0 && !pending && (
+      {remaining === 0 && pendingCount === 0 && (
         <div className="text-xs text-ink-muted px-4 py-3 border border-line rounded-sm enter-4">
           Limite de 3 fotos atingido. Seu portfólio está completo.
         </div>

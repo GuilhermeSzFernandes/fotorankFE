@@ -20,7 +20,7 @@ function StarRating({ score, onChange, disabled }) {
           onMouseLeave={() => setHover(null)}
           onClick={() => onChange(star)}
           className={`transition-all duration-75 disabled:opacity-50 ${
-            star <= display ? 'text-amber-400' : 'text-ink-ghost/20 hover:text-amber-300'
+            star <= display ? 'text-amber-400' : 'text-ink-muted/50 hover:text-amber-300'
           } hover:scale-110 active:scale-95`}
           title={`${star} ponto${star !== 1 ? 's' : ''}`}
         >
