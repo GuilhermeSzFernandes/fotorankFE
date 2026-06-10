@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import Avatar from '../components/Avatar';
 
@@ -52,19 +53,19 @@ function Lightbox({ photo, onClose }) {
     };
   }, [onClose]);
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 sm:p-6"
       onClick={onClose}
     >
       <div
-        className="relative flex flex-col max-w-[95vw] max-h-[92vh]"
+        className="relative max-w-[95vw] max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         <img
           src={photo.url}
           alt={photo.originalName}
-          className="block max-w-full max-h-[80vh] object-contain rounded-sm shadow-2xl"
+          className="block max-w-full max-h-[90vh] object-contain rounded-sm shadow-2xl"
         />
       </div>
       <button
@@ -75,7 +76,8 @@ function Lightbox({ photo, onClose }) {
           <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
-    </div>
+    </div>,
+    document.body
   );
 }
 

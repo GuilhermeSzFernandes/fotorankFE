@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Avatar from '../components/Avatar';
@@ -22,7 +23,7 @@ function PhotoCard({ photo, index }) {
 
   return (
     <>
-      {expanded && (
+      {expanded && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 sm:p-6"
           onClick={() => setExpanded(false)}
@@ -45,7 +46,8 @@ function PhotoCard({ photo, index }) {
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
-        </div>
+        </div>,
+        document.body
       )}
 
       <div
@@ -112,6 +114,7 @@ function PhotoCard({ photo, index }) {
 }
 
 export default function UserProfile() {
+
   const { userId } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
