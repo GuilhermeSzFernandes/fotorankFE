@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Valores iniciais (dark) — o JS sobrescreve via element.style.setProperty */
+:root {
+  --base:           8   8   8;
+  --surface:        17  17  17;
+  --surface-raised: 22  22  22;
+  --surface-high:   30  30  30;
+  --border:         30  30  30;
+  --border-muted:   20  20  20;
+  --border-strong:  50  50  50;
+  --ink:            232 232 232;
+  --ink-secondary:  120 120 120;
+  --ink-muted:      72  72  72;
+  --ink-ghost:      40  40  40;
+}
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+  body {
+    @apply bg-base text-ink font-sans;
+    font-size: 13px;
+    line-height: 1.65;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  /* Atmospheric grain */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 128px 128px;
+    opacity: 0.028;
+    pointer-events: none;
+    z-index: 9999;
+    transition: opacity 0.2s ease;
+  }
+
+  [data-theme="light"] body::after { opacity: 0.016; }
+}
+
+@layer components {
+  /* ── Buttons ── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-sans font-medium
+           transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed select-none cursor-pointer;
+  }
+  .btn-primary {
+    @apply btn bg-ink text-base hover:bg-ink/90 active:bg-ink/80 px-4 py-2 text-xs tracking-wide rounded-sm;
+  }
+  .btn-outline {
+    @apply btn border border-line-strong text-ink-secondary hover:text-ink hover:border-ink-muted
+           px-4 py-2 text-xs tracking-wide rounded-sm;
+  }
+  .btn-ghost {
+    @apply btn text-ink-secondary hover:text-ink px-3 py-1.5 text-xs rounded-sm;
+  }
+  .btn-danger {
+    @apply btn border border-red-900/40 text-red-500/70 hover:text-red-400 hover:border-red-800/60
+           px-3 py-1.5 text-xs rounded-sm;
+  }
+
+  /* ── Fields ── */
+  .field {
+    @apply w-full bg-surface border border-line rounded-sm px-3 py-2.5
+           text-ink placeholder-ink-ghost text-xs
+           focus:outline-none focus:border-line-strong transition-colors duration-150;
+  }
+  select.field option {
+    background-color: rgb(var(--surface));
+    color: rgb(var(--ink));
+  }
+  .flabel {
+    @apply block text-2xs text-ink-muted uppercase mb-2;
+  }
+
+  /* ── Panels ── */
+  .panel    { @apply bg-surface border border-line rounded-lg p-6; }
+  .panel-sm { @apply bg-surface border border-line rounded-lg p-4; }
+
+  /* ── Chips ── */
+  .chip         { @apply inline-flex items-center rounded-sm px-2 py-0.5 text-2xs font-medium; }
+  .chip-default { @apply chip border border-line-strong text-ink-secondary; }
+  .chip-green   { @apply chip border border-green-900/40 text-green-600; }
+  .chip-red     { @apply chip border border-red-900/40 text-red-500; }
+
+  /* ── Staggered entrance ── */
+  .enter-1 { animation: fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) 0ms   both; }
+  .enter-2 { animation: fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) 60ms  both; }
+  .enter-3 { animation: fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) 120ms both; }
+  .enter-4 { animation: fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) 180ms both; }
+  .enter-5 { animation: fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) 240ms both; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}

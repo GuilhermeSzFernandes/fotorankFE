@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FotoRank</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <!-- Aplica tema antes do React renderizar — evita flash -->
+    <script>
+      (function () {
+        var DARK  = { '--base':'8 8 8','--surface':'17 17 17','--surface-raised':'22 22 22','--surface-high':'30 30 30','--border':'30 30 30','--border-muted':'20 20 20','--border-strong':'50 50 50','--ink':'232 232 232','--ink-secondary':'120 120 120','--ink-muted':'72 72 72','--ink-ghost':'40 40 40' };
+        var LIGHT = { '--base':'247 247 245','--surface':'255 255 255','--surface-raised':'243 243 241','--surface-high':'232 232 229','--border':'229 229 226','--border-muted':'241 241 238','--border-strong':'200 200 197','--ink':'26 26 26','--ink-secondary':'107 107 104','--ink-muted':'155 155 152','--ink-ghost':'203 203 200' };
+        var t = localStorage.getItem('fotorank_theme') || 'dark';
+        var vars = t === 'light' ? LIGHT : DARK;
+        var root = document.documentElement;
+        for (var k in vars) root.style.setProperty(k, vars[k]);
+        root.setAttribute('data-theme', t);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
