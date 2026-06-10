@@ -13,18 +13,23 @@ function PhotoCard({ photo, index }) {
     <>
       {expanded && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/92 p-4 sm:p-8"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 sm:p-6"
           onClick={() => setExpanded(false)}
         >
-          <img
-            src={photo.url}
-            alt={photo.originalName}
-            className="max-w-full max-h-full object-contain rounded-sm shadow-2xl"
+          <div
+            className="relative flex flex-col max-w-[95vw] max-h-[92vh]"
             onClick={(e) => e.stopPropagation()}
-          />
-          <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/40 text-xs font-mono">
-            {photo.originalName} · ESC para fechar
-          </p>
+          >
+            <img
+              src={photo.url}
+              alt={photo.originalName}
+              className="block max-w-full max-h-[80vh] object-contain rounded-sm shadow-2xl"
+            />
+            <div className="mt-3 flex items-center justify-between px-1">
+              <p className="text-white/50 text-xs font-mono">{photo.originalName}</p>
+              <p className="text-white/25 text-2xs font-mono">ESC para fechar</p>
+            </div>
+          </div>
           <button
             onClick={() => setExpanded(false)}
             className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"

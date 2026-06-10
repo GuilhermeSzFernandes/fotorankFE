@@ -54,18 +54,25 @@ function Lightbox({ photo, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/92 p-4 sm:p-8"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 sm:p-6"
       onClick={onClose}
     >
-      <img
-        src={photo.url}
-        alt={photo.originalName}
-        className="max-w-full max-h-full object-contain rounded-sm shadow-2xl"
+      <div
+        className="relative flex flex-col max-w-[95vw] max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
-      />
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center pointer-events-none">
-        <p className="text-white/50 text-xs font-mono">{photo.originalName}</p>
-        <p className="text-white/30 text-2xs font-mono mt-0.5">{photo.ownerName}</p>
+      >
+        <img
+          src={photo.url}
+          alt={photo.originalName}
+          className="block max-w-full max-h-[80vh] object-contain rounded-sm shadow-2xl"
+        />
+        <div className="mt-3 flex items-center justify-between px-1">
+          <div>
+            <p className="text-white/60 text-xs font-mono">{photo.originalName}</p>
+            <p className="text-white/35 text-2xs font-mono mt-0.5">{photo.ownerName}</p>
+          </div>
+          <p className="text-white/25 text-2xs font-mono">ESC para fechar</p>
+        </div>
       </div>
       <button
         onClick={onClose}
@@ -75,9 +82,6 @@ function Lightbox({ photo, onClose }) {
           <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
-      <p className="absolute top-4 left-1/2 -translate-x-1/2 text-white/30 text-2xs font-mono">
-        ESC para fechar
-      </p>
     </div>
   );
 }
