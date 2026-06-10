@@ -255,6 +255,33 @@ export default function Upload() {
         ))}
       </div>
 
+      {/* Status de avaliação por foto */}
+      {photos.length > 0 && (
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          {[0, 1, 2].map((i) => {
+            const photo = photos[i];
+            if (!photo) return <div key={i} />;
+            return (
+              <div key={i} className="px-1">
+                {photo.gradeCount === 0 ? (
+                  <p className="text-2xs text-ink-ghost/40 font-mono text-center">não avaliada</p>
+                ) : (
+                  <div className="text-center">
+                    <p className="font-display text-2xl italic text-ink leading-none" style={{ letterSpacing: '-0.02em' }}>
+                      {photo.avgScore?.toFixed(1)}
+                      <span className="text-xs text-ink-muted not-italic font-mono">/10</span>
+                    </p>
+                    <p className="text-2xs text-ink-muted font-mono mt-0.5">
+                      {photo.gradeCount} avaliação{photo.gradeCount !== 1 ? 'ões' : ''}
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Ações da pré-visualização */}
       {pending && (
         <div className="flex items-center gap-3 mb-6 enter-1">

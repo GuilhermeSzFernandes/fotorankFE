@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import Avatar from '../components/Avatar';
+
+const USERS_PER_PAGE = 10;
 
 function KPI({ label, value, note, delay = 0 }) {
   return (
@@ -17,11 +19,64 @@ function KPI({ label, value, note, delay = 0 }) {
 const ROLE_LABEL = { admin: 'Admin', teacher: 'Professor', participant: 'Participante' };
 const ROLE_CHIP  = { admin: 'chip-red', teacher: 'chip-green', participant: 'chip-default' };
 
+// ── Dropdown de 3 pontos ───────────────────────────────────────────────────────
+function UserMenu({ user, onRoleChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef();
+
+  useEffect(() => {
+    if (!open) return;
+    function handler(e) { if (!ref.current?.contains(e.target)) setOpen(false); }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  if (user.role === 'admin') return null;
+
+  const toTeacher     = user.role === 'participant';
+  const toParticipant = user.role === 'teacher';
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-7 h-7 flex items-center justify-center rounded-sm text-ink-muted hover:text-ink hover:bg-surface-raised transition-colors"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="5"  r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-8 z-20 min-w-[180px] bg-surface border border-line rounded-sm shadow-lg py-1">
+          {toTeacher && (
+            <button
+              onClick={() => { setOpen(false); onRoleChange(user.id, 'teacher'); }}
+              className="w-full text-left px-4 py-2.5 text-xs text-ink hover:bg-surface-raised transition-colors"
+            >
+              Tornar Professor
+            </button>
+          )}
+          {toParticipant && (
+            <button
+              onClick={() => { setOpen(false); onRoleChange(user.id, 'participant'); }}
+              className="w-full text-left px-4 py-2.5 text-xs text-ink hover:bg-surface-raised transition-colors"
+            >
+              Tornar Participante
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Admin() {
   const [tab, setTab] = useState('metrics');
   const [metrics, setMetrics] = useState(null);
   const [teachers, setTeachers] = useState([]);
   const [users, setUsers] = useState([]);
+  const [usersPage, setUsersPage] = useState(0);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -58,6 +113,22 @@ export default function Admin() {
     await axios.delete(`/api/admin/teachers/${id}`);
     load();
   }
+
+  async function handleRoleChange(userId, role) {
+    setError('');
+    setSuccess('');
+    try {
+      await axios.patch(`/api/admin/users/${userId}/role`, { role });
+      setSuccess(`Papel atualizado para ${ROLE_LABEL[role]}.`);
+      load();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Erro ao alterar papel.');
+    }
+  }
+
+  const usersTotalPages = Math.ceil(users.length / USERS_PER_PAGE);
+  const usersPage_      = Math.min(usersPage, Math.max(0, usersTotalPages - 1));
+  const usersVisible    = users.slice(usersPage_ * USERS_PER_PAGE, (usersPage_ + 1) * USERS_PER_PAGE);
 
   const TABS = [['metrics', 'Métricas'], ['teachers', 'Professores'], ['users', 'Usuários']];
 
@@ -164,8 +235,9 @@ export default function Admin() {
           <h2 className="text-xs font-medium text-ink mb-6 uppercase tracking-wider">
             Todos os usuários <span className="font-mono text-ink-muted font-normal">({users.length})</span>
           </h2>
+
           <div>
-            {users.map((u, i) => (
+            {usersVisible.map((u, i) => (
               <div key={u.id} className="flex items-center justify-between py-4 border-b border-line last:border-0"
                 style={{ animation: `fadeUp 0.35s ease ${i * 30}ms both` }}>
                 <div className="flex items-center gap-3 min-w-0 mr-4">
@@ -175,15 +247,46 @@ export default function Admin() {
                     <p className="text-2xs text-ink-muted font-mono mt-0.5 truncate">{u.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 shrink-0">
+                <div className="flex items-center gap-3 shrink-0">
                   <span className={`chip ${ROLE_CHIP[u.role]}`}>{ROLE_LABEL[u.role]}</span>
                   <span className="text-2xs text-ink-muted font-mono hidden sm:block">
                     {new Date(u.createdAt).toLocaleDateString('pt-BR')}
                   </span>
+                  <UserMenu user={u} onRoleChange={handleRoleChange} />
                 </div>
               </div>
             ))}
           </div>
+
+          {usersTotalPages > 1 && (
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-line">
+              <button
+                onClick={() => setUsersPage((p) => Math.max(0, p - 1))}
+                disabled={usersPage_ === 0}
+                className="btn-ghost disabled:opacity-30"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                Anterior
+              </button>
+
+              <span className="text-2xs text-ink-muted font-mono">
+                {usersPage_ + 1} / {usersTotalPages}
+              </span>
+
+              <button
+                onClick={() => setUsersPage((p) => Math.min(usersTotalPages - 1, p + 1))}
+                disabled={usersPage_ >= usersTotalPages - 1}
+                className="btn-ghost disabled:opacity-30"
+              >
+                Próxima
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

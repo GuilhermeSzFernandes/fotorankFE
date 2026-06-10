@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Avatar from '../components/Avatar';
 
@@ -30,8 +30,11 @@ function StarRating({ score, onChange, disabled }) {
           </svg>
         </button>
       ))}
-      <span className={`ml-2 font-mono text-sm tabular-nums ${score != null ? 'text-ink' : 'text-ink-ghost/30'}`}>
-        {score != null ? `${score}/10` : '—/10'}
+      <span className={`ml-3 font-display italic text-2xl tabular-nums leading-none transition-colors duration-75 ${
+        hover != null ? 'text-amber-400' : score != null ? 'text-ink' : 'text-ink-ghost/25'
+      }`} style={{ letterSpacing: '-0.02em' }}>
+        {hover ?? score ?? '—'}
+        <span className="text-xs text-ink-muted not-italic font-mono">/10</span>
       </span>
     </div>
   );
