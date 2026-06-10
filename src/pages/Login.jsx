@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+// axios.defaults já configurado em AuthContext
 
 export default function Login() {
   const { login } = useAuth();
@@ -16,7 +17,7 @@ export default function Login() {
     setLoading(true);
     try {
       const { data } = await axios.post('/api/auth/login', form);
-      login(data.token, data.user);
+      login(data.user);
       if (data.user.role === 'teacher') navigate('/teacher');
       else if (data.user.role === 'admin') navigate('/admin');
       else navigate('/upload');

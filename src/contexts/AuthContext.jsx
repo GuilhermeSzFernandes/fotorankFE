@@ -2,41 +2,44 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
 axios.defaults.baseURL = import.meta.env.VITE_API_URL ?? '';
+axios.defaults.withCredentials = true;
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('fotorank_user')); } catch { return null; }
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem('fotorank_user');
-    const token = localStorage.getItem('fotorank_token');
-    if (stored && token) {
-      setUser(JSON.parse(stored));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    }
-    setLoading(false);
+    axios.get('/api/auth/me')
+      .then(({ data }) => {
+        setUser(data);
+        localStorage.setItem('fotorank_user', JSON.stringify(data));
+      })
+      .catch(() => {
+        setUser(null);
+        localStorage.removeItem('fotorank_user');
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  function login(token, userData) {
-    localStorage.setItem('fotorank_token', token);
-    localStorage.setItem('fotorank_user', JSON.stringify(userData));
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  function login(userData) {
     setUser(userData);
+    localStorage.setItem('fotorank_user', JSON.stringify(userData));
   }
 
-  function logout() {
-    localStorage.removeItem('fotorank_token');
-    localStorage.removeItem('fotorank_user');
-    delete axios.defaults.headers.common['Authorization'];
+  async function logout() {
+    await axios.post('/api/auth/logout').catch(() => {});
     setUser(null);
+    localStorage.removeItem('fotorank_user');
   }
 
   function updateUser(updates) {
     const updated = { ...user, ...updates };
-    localStorage.setItem('fotorank_user', JSON.stringify(updated));
     setUser(updated);
+    localStorage.setItem('fotorank_user', JSON.stringify(updated));
   }
 
   return (

@@ -9,7 +9,7 @@ export default function Register() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: '', email: '', password: '', confirm: '',
-    etec: '', studentType: '', rm: '',
+    etec: '', studentType: '', cpf: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,6 +22,7 @@ export default function Register() {
     e.preventDefault();
     setError('');
     if (form.password !== form.confirm) return setError('As senhas não coincidem.');
+    if (!form.cpf.trim()) return setError('CPF é obrigatório.');
     setLoading(true);
     try {
       const { data } = await axios.post('/api/auth/register', {
@@ -30,9 +31,9 @@ export default function Register() {
         password: form.password,
         etec: form.etec || null,
         studentType: form.studentType || null,
-        rm: form.rm || null,
+        cpf: form.cpf.trim(),
       });
-      login(data.token, data.user);
+      login(data.user);
       navigate('/upload');
     } catch (err) {
       setError(err.response?.data?.message || 'Erro ao criar conta.');
@@ -92,9 +93,9 @@ export default function Register() {
           </div>
 
           <div>
-            <label className="flabel">RM <span className="normal-case font-normal opacity-50">(opcional)</span></label>
-            <input type="text" className="field" placeholder="Ex: 123456"
-              value={form.rm} onChange={set('rm')} />
+            <label className="flabel">CPF</label>
+            <input type="text" className="field" placeholder="000.000.000-00"
+              value={form.cpf} onChange={set('cpf')} required />
           </div>
 
           <div>
