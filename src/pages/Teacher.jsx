@@ -66,13 +66,6 @@ function Lightbox({ photo, onClose }) {
           alt={photo.originalName}
           className="block max-w-full max-h-[80vh] object-contain rounded-sm shadow-2xl"
         />
-        <div className="mt-3 flex items-center justify-between px-1">
-          <div>
-            <p className="text-white/60 text-xs font-mono">{photo.originalName}</p>
-            <p className="text-white/35 text-2xs font-mono mt-0.5">{photo.ownerName}</p>
-          </div>
-          <p className="text-white/25 text-2xs font-mono">ESC para fechar</p>
-        </div>
       </div>
       <button
         onClick={onClose}

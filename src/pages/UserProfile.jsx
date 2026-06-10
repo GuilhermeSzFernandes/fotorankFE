@@ -9,6 +9,17 @@ function PhotoCard({ photo, index }) {
   const [expanded, setExpanded] = useState(false);
   const comments = photo.feedbacks?.filter((f) => f.comment?.trim()) ?? [];
 
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e) => { if (e.key === 'Escape') setExpanded(false); };
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [expanded]);
+
   return (
     <>
       {expanded && (
@@ -17,18 +28,14 @@ function PhotoCard({ photo, index }) {
           onClick={() => setExpanded(false)}
         >
           <div
-            className="relative flex flex-col max-w-[95vw] max-h-[92vh]"
+            className="relative max-w-[95vw] max-h-[92vh]"
             onClick={(e) => e.stopPropagation()}
           >
             <img
               src={photo.url}
               alt={photo.originalName}
-              className="block max-w-full max-h-[80vh] object-contain rounded-sm shadow-2xl"
+              className="block max-w-full max-h-[90vh] object-contain rounded-sm shadow-2xl"
             />
-            <div className="mt-3 flex items-center justify-between px-1">
-              <p className="text-white/50 text-xs font-mono">{photo.originalName}</p>
-              <p className="text-white/25 text-2xs font-mono">ESC para fechar</p>
-            </div>
           </div>
           <button
             onClick={() => setExpanded(false)}
