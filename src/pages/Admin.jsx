@@ -71,25 +71,38 @@ function UserMenu({ user, onRoleChange }) {
   );
 }
 
+const PHOTOS_PER_PAGE = 15;
+
 export default function Admin() {
   const [tab, setTab] = useState('metrics');
   const [metrics, setMetrics] = useState(null);
   const [teachers, setTeachers] = useState([]);
   const [users, setUsers] = useState([]);
+  const [photos, setPhotos] = useState([]);
   const [usersPage, setUsersPage] = useState(0);
+  const [photosPage, setPhotosPage] = useState(0);
+  const [copiedId, setCopiedId] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   async function load() {
-    const [m, t, u] = await Promise.all([
+    const [m, t, u, p] = await Promise.all([
       axios.get('/api/admin/metrics').then((r) => r.data),
       axios.get('/api/admin/teachers').then((r) => r.data),
       axios.get('/api/admin/users').then((r) => r.data),
+      axios.get('/api/admin/photos').then((r) => r.data),
     ]);
     setMetrics(m);
     setTeachers(t);
     setUsers(u);
+    setPhotos(p);
+  }
+
+  function copyId(id) {
+    navigator.clipboard.writeText(id).catch(() => {});
+    setCopiedId(id);
+    setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
   }
 
   useEffect(() => { load(); }, []);
@@ -130,7 +143,11 @@ export default function Admin() {
   const usersPage_      = Math.min(usersPage, Math.max(0, usersTotalPages - 1));
   const usersVisible    = users.slice(usersPage_ * USERS_PER_PAGE, (usersPage_ + 1) * USERS_PER_PAGE);
 
-  const TABS = [['metrics', 'Métricas'], ['teachers', 'Professores'], ['users', 'Usuários']];
+  const photosTotalPages = Math.ceil(photos.length / PHOTOS_PER_PAGE);
+  const photosPage_      = Math.min(photosPage, Math.max(0, photosTotalPages - 1));
+  const photosVisible    = photos.slice(photosPage_ * PHOTOS_PER_PAGE, (photosPage_ + 1) * PHOTOS_PER_PAGE);
+
+  const TABS = [['metrics', 'Métricas'], ['teachers', 'Professores'], ['users', 'Usuários'], ['photos', 'Fotos']];
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-14">
@@ -227,6 +244,91 @@ export default function Admin() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {tab === 'photos' && (
+        <div className="panel enter-1">
+          <h2 className="text-xs font-medium text-ink mb-1 uppercase tracking-wider">
+            Fotos <span className="font-mono text-ink-muted font-normal">({photos.length})</span>
+          </h2>
+          <p className="text-2xs text-ink-muted font-mono mb-6">Clique no UUID para copiar</p>
+
+          {photos.length === 0 ? (
+            <p className="text-xs text-ink-muted font-mono">— nenhuma foto cadastrada —</p>
+          ) : (
+            <div>
+              <div className="hidden md:grid grid-cols-[1fr_1fr_auto_auto_auto] gap-x-4 px-2 pb-2 border-b border-line text-2xs text-ink-muted uppercase tracking-wider">
+                <span>UUID</span>
+                <span>Participante</span>
+                <span>Data</span>
+                <span className="text-center">Notas</span>
+                <span className="text-center">Média</span>
+              </div>
+
+              {photosVisible.map((photo, i) => (
+                <div key={photo.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto_auto_auto] gap-x-4 items-center py-4 border-b border-line last:border-0 gap-y-1.5"
+                  style={{ animation: `fadeUp 0.3s ease ${i * 25}ms both` }}>
+
+                  <button
+                    onClick={() => copyId(photo.id)}
+                    className="group flex items-center gap-1.5 text-left"
+                    title="Copiar UUID"
+                  >
+                    <span className={`font-mono text-2xs break-all transition-colors ${copiedId === photo.id ? 'text-green-400' : 'text-ink-secondary group-hover:text-ink'}`}>
+                      {photo.id}
+                    </span>
+                    {copiedId === photo.id ? (
+                      <svg className="shrink-0 text-green-400" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    ) : (
+                      <svg className="shrink-0 text-ink-muted opacity-0 group-hover:opacity-100 transition-opacity" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                    )}
+                  </button>
+
+                  <p className="text-xs text-ink truncate">{photo.ownerName}</p>
+                  <p className="text-2xs text-ink-muted font-mono whitespace-nowrap">
+                    {new Date(photo.createdAt).toLocaleDateString('pt-BR')}
+                  </p>
+                  <p className="text-2xs font-mono text-center text-ink-secondary">{photo.gradeCount}</p>
+                  <p className="text-2xs font-mono text-center text-ink-secondary">
+                    {photo.avgScore !== null ? photo.avgScore.toFixed(1) : '—'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {photosTotalPages > 1 && (
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-line">
+              <button
+                onClick={() => setPhotosPage((p) => Math.max(0, p - 1))}
+                disabled={photosPage_ === 0}
+                className="btn-ghost disabled:opacity-30"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                Anterior
+              </button>
+              <span className="text-2xs text-ink-muted font-mono">
+                {photosPage_ + 1} / {photosTotalPages}
+              </span>
+              <button
+                onClick={() => setPhotosPage((p) => Math.min(photosTotalPages - 1, p + 1))}
+                disabled={photosPage_ >= photosTotalPages - 1}
+                className="btn-ghost disabled:opacity-30"
+              >
+                Próxima
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
       )}
 
