@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': 'https://fotorankbe.onrender.com',
+       '/api': 'https://fotorankbe.onrender.com',
       '/uploads': 'https://fotorankbe.onrender.com',
     },
   },
