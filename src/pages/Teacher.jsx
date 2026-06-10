@@ -270,7 +270,6 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
           <Avatar name={photo.ownerName} avatar={photo.ownerAvatar} size="sm" />
           <div className="min-w-0">
             <p className="text-sm font-medium text-ink truncate">{photo.ownerName}</p>
-            <p className="text-2xs text-ink-muted font-mono truncate">{photo.originalName}</p>
           </div>
         </div>
 

@@ -52,7 +52,6 @@ function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemov
       >
         <img src={photo.url} alt={photo.originalName} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
         <div className="absolute inset-0 bg-base/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 pointer-events-none">
-          <p className="text-2xs text-ink/70 font-mono truncate">{photo.originalName}</p>
           <p className="text-2xs text-ink-secondary font-mono">{new Date(photo.createdAt).toLocaleDateString('pt-BR')}</p>
         </div>
         <div className="absolute top-2 left-2 pointer-events-none">
@@ -103,7 +102,6 @@ function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemov
           <div className="flex justify-between items-start">
             <span className="font-mono text-2xs text-white/40">0{index + 1}</span>
           </div>
-          <span className="text-2xs font-mono text-white/50 truncate">{pending.file.name}</span>
         </div>
         {!uploadingThis && (
           <button
