@@ -44,7 +44,16 @@ function StarRating({ score, onChange, disabled }) {
 // ── Lightbox com navegação e avaliação ────────────────────────────────────────
 function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChange, onCommentChange, onCommentSave, onClose }) {
   const [idx, setIdx] = useState(initialIndex);
-  const photo = photos[idx];
+
+  // Fecha se não há mais fotos; ajusta índice se a lista encolheu
+  useEffect(() => {
+    if (photos.length === 0) { onClose(); return; }
+    if (idx >= photos.length) setIdx(photos.length - 1);
+  }, [photos.length]);
+
+  const photo = photos[Math.min(idx, photos.length - 1)];
+  if (!photo) return null;
+
   const score = scores[photo.id] ?? null;
   const comment = comments[photo.id] ?? '';
   const commentDirty = comment !== (photo.myGrade?.comment ?? '');
