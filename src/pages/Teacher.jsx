@@ -41,41 +41,154 @@ function StarRating({ score, onChange, disabled }) {
   );
 }
 
-// ── Lightbox ───────────────────────────────────────────────────────────────────
-function Lightbox({ photo, onClose }) {
+// ── Lightbox com navegação e avaliação ────────────────────────────────────────
+function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChange, onCommentChange, onCommentSave, onClose }) {
+  const [idx, setIdx] = useState(initialIndex);
+  const photo = photos[idx];
+  const score = scores[photo.id] ?? null;
+  const comment = comments[photo.id] ?? '';
+  const commentDirty = comment !== (photo.myGrade?.comment ?? '');
+
+  const prev = () => setIdx((i) => Math.max(0, i - 1));
+  const next = () => setIdx((i) => Math.min(photos.length - 1, i + 1));
+
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e) => {
+      if (e.key === 'Escape')     onClose();
+      if (e.key === 'ArrowLeft')  prev();
+      if (e.key === 'ArrowRight') next();
+    };
     window.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
     return () => {
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
     };
-  }, [onClose]);
+  }, [onClose, idx]);
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 sm:p-6"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex bg-black/80 backdrop-blur-md" onClick={onClose}>
+
+      {/* Seta esquerda */}
+      <button
+        onClick={(e) => { e.stopPropagation(); prev(); }}
+        disabled={idx === 0}
+        className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors disabled:opacity-20"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+
+      {/* Seta direita */}
+      <button
+        onClick={(e) => { e.stopPropagation(); next(); }}
+        disabled={idx === photos.length - 1}
+        className="absolute right-[316px] top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors disabled:opacity-20 sm:right-[336px]"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
+
+      {/* Foto */}
       <div
-        className="relative max-w-[95vw] max-h-[92vh]"
+        className="flex-1 flex items-center justify-center p-6 sm:p-10"
         onClick={(e) => e.stopPropagation()}
       >
         <img
+          key={photo.id}
           src={photo.url}
           alt={photo.originalName}
-          className="block max-w-full max-h-[90vh] object-contain rounded-sm shadow-2xl"
+          className="max-w-full max-h-[90vh] object-contain rounded-sm shadow-2xl"
         />
       </div>
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+
+      {/* Painel lateral */}
+      <div
+        className="w-72 sm:w-80 shrink-0 bg-base/95 border-l border-white/10 flex flex-col overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
+        {/* Cabeçalho */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <span className="text-2xs text-white/40 font-mono">{idx + 1} / {photos.length}</span>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-5 p-5 flex-1">
+          {/* Dono */}
+          <div className="flex items-center gap-2.5">
+            <Avatar name={photo.ownerName} avatar={photo.ownerAvatar} size="md" />
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-ink truncate">{photo.ownerName}</p>
+            </div>
+          </div>
+
+          {/* Estrelas */}
+          <div>
+            <p className="text-2xs text-ink-muted uppercase tracking-widest mb-3">Nota</p>
+            <StarRating
+              score={score}
+              onChange={(s) => onScoreChange(photo.id, s)}
+              disabled={!!saving[photo.id]}
+            />
+          </div>
+
+          {/* Comentário */}
+          <div className="flex flex-col gap-2">
+            <textarea
+              rows={3}
+              placeholder="Comentário (opcional)"
+              value={comment}
+              onChange={(e) => onCommentChange(photo.id, e.target.value)}
+              className="field py-2 text-xs resize-none"
+            />
+            {commentDirty && score != null && (
+              <button
+                onClick={() => onCommentSave(photo.id)}
+                disabled={!!saving[photo.id]}
+                className="btn-primary text-xs py-1.5 disabled:opacity-40"
+              >
+                {saving[photo.id] ? 'Salvando…' : 'Salvar comentário'}
+              </button>
+            )}
+          </div>
+
+          {/* Indicador de salvo */}
+          {score != null && !saving[photo.id] && (
+            <div className="flex items-center gap-2 text-2xs text-amber-400/70 font-mono">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              avaliada · {score}/10
+            </div>
+          )}
+          {saving[photo.id] && (
+            <p className="text-2xs text-ink-muted font-mono">salvando…</p>
+          )}
+        </div>
+
+        {/* Navegação no rodapé */}
+        <div className="flex gap-2 px-5 py-4 border-t border-white/10">
+          <button onClick={prev} disabled={idx === 0} className="btn-ghost flex-1 justify-center disabled:opacity-30 text-xs">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            Anterior
+          </button>
+          <button onClick={next} disabled={idx === photos.length - 1} className="btn-ghost flex-1 justify-center disabled:opacity-30 text-xs">
+            Próxima
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>,
     document.body
   );
@@ -224,7 +337,7 @@ export default function Teacher() {
   const [comments, setComments] = useState({});
   const [filter, setFilter]   = useState('pending');
   const [page, setPage]       = useState(0);
-  const [lightbox, setLightbox] = useState(null);
+  const [lightboxIdx, setLightboxIdx] = useState(null);
 
   async function loadPhotos() {
     try {
@@ -304,7 +417,19 @@ export default function Teacher() {
 
   return (
     <>
-      {lightbox && <Lightbox photo={lightbox} onClose={() => setLightbox(null)} />}
+      {lightboxIdx !== null && (
+        <Lightbox
+          photos={filtered}
+          initialIndex={lightboxIdx}
+          scores={scores}
+          comments={comments}
+          saving={saving}
+          onScoreChange={handleScoreChange}
+          onCommentChange={handleCommentChange}
+          onCommentSave={handleCommentSave}
+          onClose={() => setLightboxIdx(null)}
+        />
+      )}}
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
 
@@ -376,7 +501,7 @@ export default function Teacher() {
                   onScoreChange={handleScoreChange}
                   onCommentChange={handleCommentChange}
                   onCommentSave={handleCommentSave}
-                  onExpand={setLightbox}
+                  onExpand={(p) => setLightboxIdx(filtered.findIndex((f) => f.id === p.id))}
                 />
               ))}
             </div>
