@@ -2,22 +2,52 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 
-function GallerySlot({ photo, pending, isUploadSlot, uploading, onFile, onRemovePending, fileRef, index }) {
+function GallerySlot({ photo, pending, isUploadSlot, uploading, onFile, onRemovePending, onDeletePhoto, fileRef, index }) {
   // Foto já enviada definitivamente
   if (photo) {
+    const canDelete = photo.gradeCount === 0;
     return (
       <div
         className="relative aspect-square overflow-hidden rounded-sm border border-line group"
         style={{ animation: `fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) ${index * 80}ms both` }}
       >
         <img src={photo.url} alt={photo.originalName} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-        <div className="absolute inset-0 bg-base/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+
+        {/* Overlay com info — só aparece no hover em desktop */}
+        <div className="absolute inset-0 bg-base/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 pointer-events-none">
           <p className="text-2xs text-ink/70 font-mono truncate">{photo.originalName}</p>
           <p className="text-2xs text-ink-secondary font-mono">{new Date(photo.createdAt).toLocaleDateString('pt-BR')}</p>
         </div>
-        <div className="absolute top-2 left-2">
+
+        {/* Número do slot */}
+        <div className="absolute top-2 left-2 pointer-events-none">
           <span className="font-mono text-2xs text-white/40">0{index + 1}</span>
         </div>
+
+        {/* Botão de remover — sempre visível no celular, hover em desktop */}
+        {canDelete ? (
+          <button
+            onClick={() => onDeletePhoto(photo.id)}
+            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-base/80 border border-line flex items-center justify-center text-ink-muted
+                       opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200
+                       hover:text-red-400 hover:border-red-900/60 active:scale-95"
+            title="Remover foto"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        ) : (
+          <div
+            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-base/80 border border-line flex items-center justify-center
+                       opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200"
+            title="Foto já avaliada — não pode ser removida"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+        )}
       </div>
     );
   }
@@ -129,6 +159,19 @@ export default function Upload() {
     if (fileRef.current) fileRef.current.value = '';
   }
 
+  async function handleDeletePhoto(photoId) {
+    if (!window.confirm('Remover esta foto do portfólio?')) return;
+    setError('');
+    setSuccess('');
+    try {
+      await axios.delete(`/api/photos/${photoId}`);
+      setSuccess('Foto removida.');
+      loadPhotos();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Erro ao remover foto.');
+    }
+  }
+
   async function handleConfirmUpload() {
     if (!pending) return;
     setError('');
@@ -189,6 +232,7 @@ export default function Upload() {
             uploading={uploading}
             onFile={handleFileSelect}
             onRemovePending={handleRemovePending}
+            onDeletePhoto={handleDeletePhoto}
             fileRef={i === uploadSlotIndex ? fileRef : undefined}
           />
         ))}
@@ -221,7 +265,7 @@ export default function Upload() {
       )}
 
       <div className="mt-14 pt-6 border-t border-line enter-5">
-        <p className="text-2xs text-ink-muted">JPEG · PNG · WebP · máx. 10 MB por foto</p>
+        <p className="text-2xs text-ink-muted">JPEG · PNG · WebP · máx. 25 MB por foto</p>
       </div>
 
     </div>

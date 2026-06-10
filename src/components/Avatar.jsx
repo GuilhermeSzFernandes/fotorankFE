@@ -8,12 +8,10 @@ const SIZES = {
 };
 
 export default function Avatar({ name = '', avatar, size = 'md', className = '' }) {
-  const initials = name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase() || '?';
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const initials = parts.length >= 2
+    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    : (parts[0]?.[0] ?? '?').toUpperCase();
 
   const base = `${SIZES[size]} rounded-full shrink-0 object-cover border border-line ${className}`;
 
