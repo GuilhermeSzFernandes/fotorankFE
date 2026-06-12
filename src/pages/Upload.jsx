@@ -2,6 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 
+const PHASE_BANNER = {
+  waiting:    { text: 'As inscrições ainda não foram abertas.',               cls: 'text-ink-muted border-line bg-surface' },
+  evaluation: { text: 'O período de inscrições foi encerrado. Suas fotos estão em avaliação.', cls: 'text-amber-400/80 border-amber-900/30 bg-amber-900/5' },
+  closed:     { text: 'O concurso foi encerrado.',                            cls: 'text-green-500/80 border-green-900/30 bg-green-900/5' },
+};
+
 function PhotoStatus({ photo }) {
   const comments = photo.feedbacks?.filter((f) => f.comment?.trim()) ?? [];
 
@@ -41,10 +47,10 @@ function PhotoStatus({ photo }) {
   );
 }
 
-function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemovePending, onDeletePhoto, fileRef, index }) {
+function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemovePending, onDeletePhoto, fileRef, index, canEdit }) {
   // Foto já confirmada
   if (photo) {
-    const canDelete = photo.gradeCount === 0;
+    const canDelete = canEdit && photo.gradeCount === 0;
     return (
       <div
         className="relative aspect-square overflow-hidden rounded-sm border border-line group"
@@ -118,7 +124,21 @@ function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemov
     );
   }
 
-  // Slot vazio — clicável
+  // Slot vazio — clicável apenas se inscrições abertas
+  if (!canEdit) {
+    return (
+      <div
+        className="relative aspect-square rounded-sm border border-dashed border-line/40 flex flex-col items-center justify-center gap-3 opacity-40"
+        style={{ animation: `fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) ${index * 80}ms both` }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-ghost">
+          <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+        <span className="absolute top-2 left-2 font-mono text-2xs text-ink-ghost/40">0{index + 1}</span>
+      </div>
+    );
+  }
+
   return (
     <label
       className="relative aspect-square rounded-sm border border-dashed border-line-strong hover:border-ink-muted transition-colors duration-200 cursor-pointer flex flex-col items-center justify-center gap-3 group"
@@ -139,14 +159,15 @@ function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemov
 export default function Upload() {
   const { user } = useAuth();
   const [photos, setPhotos]   = useState([]);
-  // pendings: { [slotIndex]: { file, previewUrl } }
   const [pendings, setPendings] = useState({});
   const [uploading, setUploading] = useState(false);
-  // qual slot está sendo enviado agora
   const [uploadingSlot, setUploadingSlot] = useState(null);
   const [error, setError]   = useState('');
   const [success, setSuccess] = useState('');
+  const [phase, setPhase] = useState(null);
   const fileRefs = [useRef(), useRef(), useRef()];
+
+  const canEdit = phase === 'registration';
 
   async function loadPhotos() {
     try {
@@ -157,7 +178,16 @@ export default function Upload() {
     }
   }
 
-  useEffect(() => { loadPhotos(); }, []);
+  async function loadPhase() {
+    try {
+      const { data } = await axios.get('/api/contest/config');
+      setPhase(data.phase);
+    } catch {
+      setPhase('waiting');
+    }
+  }
+
+  useEffect(() => { loadPhotos(); loadPhase(); }, []);
 
   // Revoga URLs ao desmontar
   useEffect(() => {
@@ -268,9 +298,15 @@ export default function Upload() {
         </h1>
         <p className="text-xs text-ink-secondary mt-3 enter-3">
           {user?.name} · {photos.length}/3 enviadas
-          {remaining > 0 && ` · ${remaining} vaga${remaining > 1 ? 's' : ''} disponível`}
+          {canEdit && remaining > 0 && ` · ${remaining} vaga${remaining > 1 ? 's' : ''} disponível`}
         </p>
       </div>
+
+      {phase && phase !== 'registration' && PHASE_BANNER[phase] && (
+        <div className={`text-xs mb-8 px-3 py-2.5 border rounded-sm enter-1 ${PHASE_BANNER[phase].cls}`}>
+          {PHASE_BANNER[phase].text}
+        </div>
+      )}
 
       {error && (
         <div className="text-red-400/80 text-xs mb-6 px-3 py-2.5 border border-red-900/30 rounded-sm bg-red-900/5 enter-1">
@@ -296,6 +332,7 @@ export default function Upload() {
               onRemovePending={() => handleRemovePending(i)}
               onDeletePhoto={handleDeletePhoto}
               fileRef={fileRefs[i]}
+              canEdit={canEdit}
             />
             {photos[i] && <PhotoStatus photo={photos[i]} />}
           </div>
@@ -303,7 +340,7 @@ export default function Upload() {
       </div>
 
       {/* Ações */}
-      {pendingCount > 0 && (
+      {pendingCount > 0 && canEdit && (
         <div className="flex items-center gap-3 mb-6 enter-1">
           <button
             onClick={handleConfirmUpload}

@@ -2,6 +2,82 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import Avatar from '../components/Avatar';
 
+const PHASE_META = {
+  waiting:      { label: 'Aguardando início',       color: 'text-ink-muted',    border: 'border-line',            bg: 'bg-surface' },
+  registration: { label: 'Inscrições abertas',      color: 'text-blue-400',     border: 'border-blue-900/40',     bg: 'bg-blue-900/5' },
+  evaluation:   { label: 'Avaliação em andamento',  color: 'text-amber-400',    border: 'border-amber-900/40',    bg: 'bg-amber-900/5' },
+  closed:       { label: 'Concurso encerrado',      color: 'text-green-500',    border: 'border-green-900/40',    bg: 'bg-green-900/5' },
+};
+
+function PhaseSwitch({ current, override, onSet, loading }) {
+  const phases = [
+    { key: 'waiting',      icon: '○', label: 'Aguardando' },
+    { key: 'registration', icon: '◑', label: 'Inscrições' },
+    { key: 'evaluation',   icon: '◕', label: 'Avaliação' },
+    { key: 'closed',       icon: '●', label: 'Encerrado' },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium text-ink uppercase tracking-wider">Fase atual</p>
+        {override && (
+          <button
+            onClick={() => onSet(null)}
+            disabled={loading}
+            className="text-2xs text-ink-muted hover:text-ink-secondary font-mono transition-colors"
+          >
+            usar datas automáticas
+          </button>
+        )}
+      </div>
+
+      {override && (
+        <div className="text-2xs font-mono text-amber-400/70 px-3 py-1.5 border border-amber-900/30 rounded-sm bg-amber-900/5">
+          Fase definida manualmente — datas ignoradas
+        </div>
+      )}
+
+      <div className="grid grid-cols-4 gap-2">
+        {phases.map(({ key, icon, label }) => {
+          const active = current === key;
+          const meta = PHASE_META[key];
+          return (
+            <button
+              key={key}
+              onClick={() => onSet(key)}
+              disabled={loading || active}
+              className={`flex flex-col items-center gap-2 py-4 px-2 rounded-sm border transition-all duration-150 disabled:cursor-default ${
+                active
+                  ? `${meta.border} ${meta.bg} ${meta.color}`
+                  : 'border-line text-ink-muted hover:border-ink-secondary hover:text-ink-secondary'
+              }`}
+            >
+              <span className="text-xl leading-none">{icon}</span>
+              <span className="text-2xs font-mono text-center leading-tight">{label}</span>
+              {active && <span className="text-2xs font-mono opacity-60">ativa</span>}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function DateField({ label, value, onChange }) {
+  return (
+    <div>
+      <label className="flabel">{label}</label>
+      <input
+        type="datetime-local"
+        className="field"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  );
+}
+
 const USERS_PER_PAGE = 10;
 
 function KPI({ label, value, note, delay = 0 }) {
@@ -73,6 +149,15 @@ function UserMenu({ user, onRoleChange }) {
 
 const PHOTOS_PER_PAGE = 15;
 
+function toLocalInput(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  if (isNaN(d)) return '';
+  // datetime-local expects "YYYY-MM-DDTHH:mm"
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function Admin() {
   const [tab, setTab] = useState('metrics');
   const [metrics, setMetrics] = useState(null);
@@ -86,17 +171,57 @@ export default function Admin() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Contest state
+  const [contest, setContest] = useState(null);
+  const [contestDates, setContestDates] = useState({ registration_start: '', registration_end: '', evaluation_start: '', evaluation_end: '' });
+  const [contestLoading, setContestLoading] = useState(false);
+
   async function load() {
-    const [m, t, u, p] = await Promise.all([
+    const [m, t, u, p, c] = await Promise.all([
       axios.get('/api/admin/metrics').then((r) => r.data),
       axios.get('/api/admin/teachers').then((r) => r.data),
       axios.get('/api/admin/users').then((r) => r.data),
       axios.get('/api/admin/photos').then((r) => r.data),
+      axios.get('/api/contest/config').then((r) => r.data),
     ]);
     setMetrics(m);
     setTeachers(t);
     setUsers(u);
     setPhotos(p);
+    setContest(c);
+    setContestDates({
+      registration_start: toLocalInput(c.config?.registration_start),
+      registration_end:   toLocalInput(c.config?.registration_end),
+      evaluation_start:   toLocalInput(c.config?.evaluation_start),
+      evaluation_end:     toLocalInput(c.config?.evaluation_end),
+    });
+  }
+
+  async function handleSaveDates(e) {
+    e.preventDefault();
+    setError(''); setSuccess(''); setContestLoading(true);
+    try {
+      const { data } = await axios.put('/api/contest/config', contestDates);
+      setContest(data);
+      setSuccess('Datas salvas com sucesso.');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Erro ao salvar datas.');
+    } finally {
+      setContestLoading(false);
+    }
+  }
+
+  async function handleSetPhase(phase) {
+    setError(''); setSuccess(''); setContestLoading(true);
+    try {
+      const { data } = await axios.post('/api/contest/phase', { phase });
+      setContest(data);
+      setSuccess(phase ? `Fase "${data.phaseLabel}" ativada manualmente.` : 'Voltando ao controle automático por datas.');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Erro ao alterar fase.');
+    } finally {
+      setContestLoading(false);
+    }
   }
 
   function copyId(id) {
@@ -147,7 +272,7 @@ export default function Admin() {
   const photosPage_      = Math.min(photosPage, Math.max(0, photosTotalPages - 1));
   const photosVisible    = photos.slice(photosPage_ * PHOTOS_PER_PAGE, (photosPage_ + 1) * PHOTOS_PER_PAGE);
 
-  const TABS = [['metrics', 'Métricas'], ['teachers', 'Professores'], ['users', 'Usuários'], ['photos', 'Fotos']];
+  const TABS = [['contest', 'Concurso'], ['metrics', 'Métricas'], ['teachers', 'Professores'], ['users', 'Usuários'], ['photos', 'Fotos']];
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-14">
@@ -175,6 +300,64 @@ export default function Admin() {
                 : 'text-green-500/80 border-green-900/30 bg-green-900/5'
         }`}>
           {error || success}
+        </div>
+      )}
+
+      {tab === 'contest' && contest && (
+        <div className="space-y-6 enter-1">
+          {/* Status atual */}
+          <div className={`panel border ${PHASE_META[contest.phase]?.border ?? 'border-line'} ${PHASE_META[contest.phase]?.bg ?? ''}`}>
+            <p className="text-2xs text-ink-muted uppercase tracking-widest mb-2">Status do concurso</p>
+            <p className={`font-display text-3xl italic leading-none ${PHASE_META[contest.phase]?.color ?? 'text-ink'}`}
+               style={{ letterSpacing: '-0.02em' }}>
+              {contest.phaseLabel}
+            </p>
+          </div>
+
+          {/* Switch de fase manual */}
+          <div className="panel">
+            <PhaseSwitch
+              current={contest.phase}
+              override={contest.config?.phase_override ?? null}
+              onSet={handleSetPhase}
+              loading={contestLoading}
+            />
+          </div>
+
+          {/* Configuração de datas */}
+          <div className="panel">
+            <h2 className="text-xs font-medium text-ink mb-1 uppercase tracking-wider">Configurar datas</h2>
+            <p className="text-2xs text-ink-muted font-mono mb-6">
+              As datas só são usadas quando nenhuma fase estiver definida manualmente.
+            </p>
+            <form onSubmit={handleSaveDates} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <DateField
+                  label="Início das inscrições"
+                  value={contestDates.registration_start}
+                  onChange={(v) => setContestDates((d) => ({ ...d, registration_start: v }))}
+                />
+                <DateField
+                  label="Fim das inscrições"
+                  value={contestDates.registration_end}
+                  onChange={(v) => setContestDates((d) => ({ ...d, registration_end: v }))}
+                />
+                <DateField
+                  label="Início da avaliação"
+                  value={contestDates.evaluation_start}
+                  onChange={(v) => setContestDates((d) => ({ ...d, evaluation_start: v }))}
+                />
+                <DateField
+                  label="Fim da avaliação"
+                  value={contestDates.evaluation_end}
+                  onChange={(v) => setContestDates((d) => ({ ...d, evaluation_end: v }))}
+                />
+              </div>
+              <button type="submit" className="btn-primary" disabled={contestLoading}>
+                {contestLoading ? 'Salvando…' : 'Salvar datas'}
+              </button>
+            </form>
+          </div>
         </div>
       )}
 

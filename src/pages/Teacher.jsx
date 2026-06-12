@@ -3,6 +3,12 @@ import { createPortal } from 'react-dom';
 import axios from 'axios';
 import Avatar from '../components/Avatar';
 
+const PHASE_BANNER = {
+  waiting:      { text: 'As inscrições ainda não foram abertas. A avaliação começa após o encerramento das inscrições.', cls: 'text-ink-muted border-line bg-surface' },
+  registration: { text: 'Período de inscrições em andamento. A avaliação de fotos ainda não está liberada.',             cls: 'text-blue-400/80 border-blue-900/30 bg-blue-900/5' },
+  closed:       { text: 'O concurso foi encerrado. Não é mais possível alterar avaliações.',                             cls: 'text-green-500/80 border-green-900/30 bg-green-900/5' },
+};
+
 const PER_PAGE = 3;
 
 // ── Estrelas (1–10) ────────────────────────────────────────────────────────────
@@ -42,7 +48,7 @@ function StarRating({ score, onChange, disabled }) {
 }
 
 // ── Lightbox com navegação e avaliação ────────────────────────────────────────
-function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChange, onCommentChange, onCommentSave, onUngrade, onClose }) {
+function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChange, onCommentChange, onCommentSave, onUngrade, onClose, canGrade }) {
   const [idx, setIdx] = useState(initialIndex);
 
   // Fecha se não há mais fotos; ajusta índice se a lista encolheu
@@ -146,29 +152,31 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
             <StarRating
               score={score}
               onChange={(s) => onScoreChange(photo.id, s)}
-              disabled={!!saving[photo.id]}
+              disabled={!!saving[photo.id] || !canGrade}
             />
           </div>
 
           {/* Comentário */}
-          <div className="flex flex-col gap-2">
-            <textarea
-              rows={3}
-              placeholder="Comentário (opcional)"
-              value={comment}
-              onChange={(e) => onCommentChange(photo.id, e.target.value)}
-              className="field py-2 text-xs resize-none"
-            />
-            {commentDirty && score != null && (
-              <button
-                onClick={() => onCommentSave(photo.id)}
-                disabled={!!saving[photo.id]}
-                className="btn-primary text-xs py-1.5 disabled:opacity-40"
-              >
-                {saving[photo.id] ? 'Salvando…' : 'Salvar comentário'}
-              </button>
-            )}
-          </div>
+          {canGrade && (
+            <div className="flex flex-col gap-2">
+              <textarea
+                rows={3}
+                placeholder="Comentário (opcional)"
+                value={comment}
+                onChange={(e) => onCommentChange(photo.id, e.target.value)}
+                className="field py-2 text-xs resize-none"
+              />
+              {commentDirty && score != null && (
+                <button
+                  onClick={() => onCommentSave(photo.id)}
+                  disabled={!!saving[photo.id]}
+                  className="btn-primary text-xs py-1.5 disabled:opacity-40"
+                >
+                  {saving[photo.id] ? 'Salvando…' : 'Salvar comentário'}
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Indicador de salvo + desavaliar */}
           {score != null && !saving[photo.id] && (
@@ -177,13 +185,15 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
                 <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                 avaliada · {score}/10
               </div>
-              <button
-                onClick={() => onUngrade(photo.id)}
-                className="text-2xs text-ink-muted hover:text-red-400 font-mono transition-colors"
-                title="Remover avaliação"
-              >
-                desavaliar
-              </button>
+              {canGrade && (
+                <button
+                  onClick={() => onUngrade(photo.id)}
+                  className="text-2xs text-ink-muted hover:text-red-400 font-mono transition-colors"
+                  title="Remover avaliação"
+                >
+                  desavaliar
+                </button>
+              )}
             </div>
           )}
           {saving[photo.id] && (
@@ -213,7 +223,7 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
 }
 
 // ── Card de foto ───────────────────────────────────────────────────────────────
-function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChange, onCommentSave, onUngrade, onExpand, index }) {
+function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChange, onCommentSave, onUngrade, onExpand, index, canGrade }) {
   const graded = score != null;
   const commentDirty = comment !== (photo.myGrade?.comment ?? '');
 
@@ -276,34 +286,36 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
         {/* Estrelas — clique salva automaticamente */}
         <div>
           <p className="text-2xs text-ink-muted uppercase tracking-widest mb-2">Nota</p>
-          <StarRating score={score} onChange={(s) => onScoreChange(photo.id, s)} disabled={saving} />
+          <StarRating score={score} onChange={(s) => onScoreChange(photo.id, s)} disabled={saving || !canGrade} />
         </div>
 
         {/* Comentário */}
-        <div className="flex gap-2 items-start mt-auto">
-          <input
-            type="text"
-            placeholder="Comentário (opcional)"
-            value={comment ?? ''}
-            onChange={(e) => onCommentChange(photo.id, e.target.value)}
-            className="field py-1.5 text-xs flex-1"
-            onKeyDown={(e) => { if (e.key === 'Enter' && commentDirty) onCommentSave(photo.id); }}
-          />
-          {commentDirty && score != null && (
-            <button
-              onClick={() => onCommentSave(photo.id)}
-              disabled={saving}
-              className="px-2.5 py-1.5 text-2xs text-ink-muted border border-line rounded-sm hover:border-ink-secondary hover:text-ink-secondary transition-colors shrink-0 disabled:opacity-40"
-            >
-              {saving ? '…' : 'Salvar'}
-            </button>
-          )}
-        </div>
+        {canGrade && (
+          <div className="flex gap-2 items-start mt-auto">
+            <input
+              type="text"
+              placeholder="Comentário (opcional)"
+              value={comment ?? ''}
+              onChange={(e) => onCommentChange(photo.id, e.target.value)}
+              className="field py-1.5 text-xs flex-1"
+              onKeyDown={(e) => { if (e.key === 'Enter' && commentDirty) onCommentSave(photo.id); }}
+            />
+            {commentDirty && score != null && (
+              <button
+                onClick={() => onCommentSave(photo.id)}
+                disabled={saving}
+                className="px-2.5 py-1.5 text-2xs text-ink-muted border border-line rounded-sm hover:border-ink-secondary hover:text-ink-secondary transition-colors shrink-0 disabled:opacity-40"
+              >
+                {saving ? '…' : 'Salvar'}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Estado de salvamento / desavaliar */}
         {saving ? (
           <p className="text-2xs text-ink-muted font-mono">salvando…</p>
-        ) : score != null && (
+        ) : score != null && canGrade && (
           <div className="flex justify-end">
             <button
               onClick={() => onUngrade(photo.id)}
@@ -364,11 +376,19 @@ export default function Teacher() {
   const [filter, setFilter]   = useState('pending');
   const [page, setPage]       = useState(0);
   const [lightboxIdx, setLightboxIdx] = useState(null);
+  const [phase, setPhase] = useState(null);
+
+  const canGrade = phase === 'evaluation';
 
   async function loadPhotos() {
     try {
-      const { data } = await axios.get('/api/grades');
+      const [gradesRes, contestRes] = await Promise.all([
+        axios.get('/api/grades'),
+        axios.get('/api/contest/config'),
+      ]);
+      const data = gradesRes.data;
       setPhotos(data);
+      setPhase(contestRes.data.phase);
       const s = {};
       const c = {};
       data.forEach((p) => {
@@ -469,10 +489,18 @@ export default function Teacher() {
           onCommentSave={handleCommentSave}
           onUngrade={handleUngrade}
           onClose={() => setLightboxIdx(null)}
+          canGrade={canGrade}
         />
-      )}}
+      )}
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+
+        {/* Banner de fase */}
+        {phase && phase !== 'evaluation' && PHASE_BANNER[phase] && (
+          <div className={`text-xs mb-6 px-3 py-2.5 border rounded-sm enter-1 ${PHASE_BANNER[phase].cls}`}>
+            {PHASE_BANNER[phase].text}
+          </div>
+        )}
 
         {/* Cabeçalho */}
         <div className="flex items-end justify-between mb-8 flex-wrap gap-5 enter-1">
@@ -544,6 +572,7 @@ export default function Teacher() {
                   onCommentSave={handleCommentSave}
                   onUngrade={handleUngrade}
                   onExpand={(p) => setLightboxIdx(filtered.findIndex((f) => f.id === p.id))}
+                  canGrade={canGrade}
                 />
               ))}
             </div>
