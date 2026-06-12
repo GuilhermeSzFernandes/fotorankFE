@@ -74,14 +74,6 @@ export default function Login() {
           </Link>
         </p>
 
-        <div className="mt-10 pt-6 border-t border-line enter-4">
-          <p className="text-2xs text-ink-muted uppercase mb-3">Demonstração</p>
-          <div className="space-y-1.5 font-mono text-2xs text-ink-muted/60">
-            <p>admin@fotorank.com · admin123</p>
-            <p>ana@fotorank.com · prof123</p>
-          </div>
-        </div>
-
       </div>
     </div>
   );
