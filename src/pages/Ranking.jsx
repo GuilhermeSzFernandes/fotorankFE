@@ -164,8 +164,8 @@ export default function Ranking() {
     try {
       const { data } = await axios.get('/api/ranking');
       setRestricted(false);
-      setByPhoto(data.byPhoto);
-      setByParticipant(data.byParticipant);
+      setByPhoto(Array.isArray(data.byPhoto) ? data.byPhoto : []);
+      setByParticipant(Array.isArray(data.byParticipant) ? data.byParticipant : []);
       setUpdatedAt(new Date());
       setPagePhoto(1);
       setPageParticipant(1);
@@ -181,7 +181,7 @@ export default function Ranking() {
 
   useEffect(() => { load(); }, []);
 
-  const activeList = tab === 'photo' ? byPhoto : byParticipant;
+  const activeList = (tab === 'photo' ? byPhoto : byParticipant) ?? [];
   const page = tab === 'photo' ? pagePhoto : pageParticipant;
   const setPage = tab === 'photo' ? setPagePhoto : setPageParticipant;
   const totalPages = Math.ceil(activeList.length / PER_PAGE);
