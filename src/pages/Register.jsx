@@ -9,7 +9,7 @@ export default function Register() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: '', email: '', password: '', confirm: '',
-    etec: '', studentType: '', cpf: '',
+    etec: '', studentType: '', cpf: '', phone: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,6 +23,7 @@ export default function Register() {
     setError('');
     if (form.password !== form.confirm) return setError('As senhas não coincidem.');
     if (!form.cpf.trim()) return setError('CPF é obrigatório.');
+    if (!form.phone.trim()) return setError('Telefone é obrigatório.');
     setLoading(true);
     try {
       const { data } = await axios.post('/api/auth/register', {
@@ -32,6 +33,7 @@ export default function Register() {
         etec: form.etec || null,
         studentType: form.studentType || null,
         cpf: form.cpf.trim(),
+        phone: form.phone.trim(),
       });
       login(data.user);
       navigate('/upload');
@@ -96,6 +98,12 @@ export default function Register() {
             <label className="flabel">CPF</label>
             <input type="text" className="field" placeholder="000.000.000-00"
               value={form.cpf} onChange={set('cpf')} required />
+          </div>
+
+          <div>
+            <label className="flabel">Telefone</label>
+            <input type="tel" className="field" placeholder="(00) 00000-0000"
+              value={form.phone} onChange={set('phone')} required />
           </div>
 
           <div>

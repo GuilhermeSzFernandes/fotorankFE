@@ -1,4 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Avatar from './Avatar';
 
@@ -8,13 +10,24 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const [rankingVisible, setRankingVisible] = useState(false);
+
+  useEffect(() => {
+    axios.get('/api/contest/config')
+      .then(({ data }) => {
+        setRankingVisible(data.config?.ranking_public || data.phase === 'closed');
+      })
+      .catch(() => setRankingVisible(false));
+  }, []);
 
   function handleLogout() { logout(); navigate('/login'); }
 
+  const canSeeRanking = ['admin', 'teacher'].includes(user?.role) || rankingVisible;
+
   const links = !user
-    ? [{ to: '/ranking', label: 'Ranking' }]
+    ? (canSeeRanking ? [{ to: '/ranking', label: 'Ranking' }] : [])
     : user.role === 'participant'
-    ? [{ to: '/upload', label: 'Envios' }, { to: '/ranking', label: 'Ranking' }]
+    ? [{ to: '/upload', label: 'Envios' }, ...(canSeeRanking ? [{ to: '/ranking', label: 'Ranking' }] : [])]
     : user.role === 'teacher'
     ? [{ to: '/teacher', label: 'Avaliação' }, { to: '/ranking', label: 'Ranking' }]
     : [{ to: '/admin', label: 'Admin' }, { to: '/ranking', label: 'Ranking' }];

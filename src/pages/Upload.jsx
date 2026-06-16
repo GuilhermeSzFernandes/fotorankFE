@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -8,64 +8,67 @@ const PHASE_BANNER = {
   closed:     { text: 'O concurso foi encerrado.',                            cls: 'text-green-500/80 border-green-900/30 bg-green-900/5' },
 };
 
-function PhotoStatus({ photo }) {
-  const comments = photo.feedbacks?.filter((f) => f.comment?.trim()) ?? [];
+function FullscreenModal({ photo, onClose }) {
+  const handleBackdrop = useCallback((e) => {
+    if (e.target === e.currentTarget) onClose();
+  }, [onClose]);
 
-  if (photo.gradeCount === 0) {
-    return (
-      <div className="rounded-sm border border-line/60 bg-surface px-3 py-3 flex items-center gap-2">
-        <div className="w-1.5 h-1.5 rounded-full bg-ink-ghost/30 shrink-0" />
-        <span className="text-2xs text-ink-muted font-mono">aguardando avaliação</span>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   return (
-    <div className="rounded-sm border border-amber-500/25 bg-amber-500/5 px-3 py-3 space-y-2.5">
-      <div className="flex items-baseline justify-between">
-        <div className="flex items-baseline gap-1">
-          <span className="font-display text-3xl italic text-ink leading-none" style={{ letterSpacing: '-0.03em' }}>
-            {photo.avgScore?.toFixed(1)}
-          </span>
-          <span className="text-xs text-ink-muted font-mono">/10</span>
-        </div>
-        <span className="text-2xs text-ink-muted font-mono">
-          {photo.gradeCount} avaliação{photo.gradeCount !== 1 ? 'ões' : ''}
-        </span>
-      </div>
-      {comments.length > 0 && (
-        <div className="space-y-2 pt-2 border-t border-amber-500/20">
-          {comments.map((f, j) => (
-            <div key={j} className="flex gap-2">
-              <span className="text-2xs text-amber-400/70 font-mono shrink-0 mt-0.5">{f.score}·</span>
-              <p className="text-2xs text-ink-secondary leading-relaxed">{f.comment}</p>
-            </div>
-          ))}
-        </div>
-      )}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
+      onClick={handleBackdrop}
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 z-10 w-9 h-9 flex items-center justify-center rounded-sm bg-white/10 text-white hover:bg-white/20 transition-colors"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      <img
+        src={photo.url}
+        alt={photo.originalName}
+        className="max-w-full max-h-full object-contain select-none"
+        style={{ maxHeight: '95vh', maxWidth: '95vw' }}
+      />
+      <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-2xs text-white/40 font-mono">
+        {photo.originalName}
+      </p>
     </div>
   );
 }
 
-function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemovePending, onDeletePhoto, fileRef, index, canEdit }) {
+function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemovePending, onDeletePhoto, onPhotoClick, fileRef, index, canEdit }) {
   // Foto já confirmada
   if (photo) {
-    const canDelete = canEdit && photo.gradeCount === 0;
     return (
       <div
         className="relative aspect-square overflow-hidden rounded-sm border border-line group"
         style={{ animation: `fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) ${index * 80}ms both` }}
       >
-        <img src={photo.url} alt={photo.originalName} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-        <div className="absolute inset-0 bg-base/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 pointer-events-none">
+        <button
+          onClick={() => onPhotoClick(photo)}
+          className="w-full h-full focus:outline-none"
+          title="Ver em tela cheia"
+        >
+          <img src={photo.url} alt={photo.originalName} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        </button>
+        <div className="absolute inset-0 bg-base/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 pointer-events-none">
           <p className="text-2xs text-ink-secondary font-mono">{new Date(photo.createdAt).toLocaleDateString('pt-BR')}</p>
         </div>
         <div className="absolute top-2 left-2 pointer-events-none">
           <span className="font-mono text-2xs text-white/40">0{index + 1}</span>
         </div>
-        {canDelete ? (
+        {canEdit && (
           <button
-            onClick={() => onDeletePhoto(photo.id)}
+            onClick={(e) => { e.stopPropagation(); onDeletePhoto(photo.id); }}
             className="absolute top-2 right-2 w-7 h-7 rounded-full bg-base/80 border border-line flex items-center justify-center text-ink-muted
                        opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200
                        hover:text-red-400 hover:border-red-900/60 active:scale-95"
@@ -75,16 +78,6 @@ function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemov
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
-        ) : (
-          <div
-            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-base/80 border border-line flex items-center justify-center
-                       opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200"
-            title="Foto já avaliada — não pode ser removida"
-          >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-          </div>
         )}
       </div>
     );
@@ -165,6 +158,7 @@ export default function Upload() {
   const [error, setError]   = useState('');
   const [success, setSuccess] = useState('');
   const [phase, setPhase] = useState(null);
+  const [modalPhoto, setModalPhoto] = useState(null);
   const fileRefs = [useRef(), useRef(), useRef()];
 
   const canEdit = phase === 'registration';
@@ -290,6 +284,9 @@ export default function Upload() {
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-14">
+      {modalPhoto && (
+        <FullscreenModal photo={modalPhoto} onClose={() => setModalPhoto(null)} />
+      )}
 
       <div className="mb-12">
         <p className="text-2xs text-ink-muted uppercase tracking-widest mb-4 enter-1">Portfólio</p>
@@ -321,21 +318,20 @@ export default function Upload() {
 
       <div className="grid grid-cols-3 gap-3 mb-6">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="flex flex-col gap-2">
-            <GallerySlot
-              index={i}
-              photo={photos[i]}
-              pending={!photos[i] ? pendings[i] ?? null : null}
-              uploading={uploading}
-              uploadingThis={uploadingSlot === i}
-              onFile={(e) => handleFileSelect(i, e)}
-              onRemovePending={() => handleRemovePending(i)}
-              onDeletePhoto={handleDeletePhoto}
-              fileRef={fileRefs[i]}
-              canEdit={canEdit}
-            />
-            {photos[i] && <PhotoStatus photo={photos[i]} />}
-          </div>
+          <GallerySlot
+            key={i}
+            index={i}
+            photo={photos[i]}
+            pending={!photos[i] ? pendings[i] ?? null : null}
+            uploading={uploading}
+            uploadingThis={uploadingSlot === i}
+            onFile={(e) => handleFileSelect(i, e)}
+            onRemovePending={() => handleRemovePending(i)}
+            onDeletePhoto={handleDeletePhoto}
+            onPhotoClick={setModalPhoto}
+            fileRef={fileRefs[i]}
+            canEdit={canEdit}
+          />
         ))}
       </div>
 

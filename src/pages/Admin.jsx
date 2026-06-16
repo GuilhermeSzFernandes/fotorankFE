@@ -289,11 +289,31 @@ export default function Admin() {
     e.preventDefault();
     setError(''); setSuccess(''); setContestLoading(true);
     try {
-      const { data } = await axios.put('/api/contest/config', contestDates);
+      const { data } = await axios.put('/api/contest/config', {
+        ...contestDates,
+        ranking_public: contest.config?.ranking_public ?? false,
+      });
       setContest(data);
       setSuccess('Datas salvas com sucesso.');
     } catch (err) {
       setError(err.response?.data?.message || 'Erro ao salvar datas.');
+    } finally {
+      setContestLoading(false);
+    }
+  }
+
+  async function handleToggleRankingPublic() {
+    setError(''); setSuccess(''); setContestLoading(true);
+    try {
+      const newValue = !(contest.config?.ranking_public ?? false);
+      const { data } = await axios.put('/api/contest/config', {
+        ...contestDates,
+        ranking_public: newValue,
+      });
+      setContest(data);
+      setSuccess(newValue ? 'Ranking liberado para todos.' : 'Ranking restrito a admin e professores.');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Erro ao alterar visibilidade do ranking.');
     } finally {
       setContestLoading(false);
     }
@@ -416,6 +436,35 @@ export default function Admin() {
             />
           </div>
 
+          {/* Visibilidade do ranking */}
+          <div className="panel">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xs font-medium text-ink uppercase tracking-wider">Visibilidade do ranking</h2>
+                <p className="text-2xs text-ink-muted font-mono mt-1">
+                  {contest.config?.ranking_public
+                    ? 'Visível para todos, incluindo participantes e visitantes.'
+                    : 'Visível apenas para admin e professores (ou ao encerrar o concurso).'}
+                </p>
+              </div>
+              <button
+                onClick={handleToggleRankingPublic}
+                disabled={contestLoading}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:opacity-50 ${
+                  contest.config?.ranking_public ? 'bg-green-500' : 'bg-surface-raised'
+                }`}
+                role="switch"
+                aria-checked={contest.config?.ranking_public ?? false}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ${
+                    contest.config?.ranking_public ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
           {/* Configuração de datas */}
           <div className="panel">
             <h2 className="text-xs font-medium text-ink mb-1 uppercase tracking-wider">Configurar datas</h2>
@@ -462,8 +511,8 @@ export default function Admin() {
             <KPI label="Nota média"    value={metrics.avgGrade !== null ? metrics.avgGrade.toFixed(1) : '—'} note="média geral / 10" delay={180} />
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <KPI label="Total de notas"  value={metrics.totalGrades}   delay={240} />
-            <KPI label="Fotos avaliadas" value={metrics.gradedPhotos}  delay={300} />
+            <KPI label="Total de fotos"  value={metrics.totalPhotos}    delay={240} />
+            <KPI label="Fotos avaliadas" value={metrics.gradedPhotos}   delay={300} />
             <KPI label="Sem avaliação"   value={metrics.ungradedPhotos} delay={360} />
           </div>
         </div>
@@ -527,7 +576,7 @@ export default function Admin() {
           <h2 className="text-xs font-medium text-ink mb-1 uppercase tracking-wider">
             Fotos <span className="font-mono text-ink-muted font-normal">({photos.length})</span>
           </h2>
-          <p className="text-2xs text-ink-muted font-mono mb-6">Clique na foto para visualizar · Clique no UUID para copiar</p>
+          <p className="text-2xs text-ink-muted font-mono mb-6">Clique na foto ou no UUID para visualizar · Clique no ícone de copiar para copiar o UUID</p>
 
           {photos.length === 0 ? (
             <p className="text-xs text-ink-muted font-mono">— nenhuma foto cadastrada —</p>
@@ -557,24 +606,30 @@ export default function Admin() {
                     }
                   </button>
 
-                  <button
-                    onClick={() => copyId(photo.id)}
-                    className="group flex items-center gap-1.5 text-left"
-                    title="Copiar UUID"
-                  >
-                    <span className={`font-mono text-2xs break-all transition-colors ${copiedId === photo.id ? 'text-green-400' : 'text-ink-secondary group-hover:text-ink'}`}>
+                  <div className="group flex items-center gap-1.5">
+                    <button
+                      onClick={() => setModalPhoto(photo)}
+                      className={`font-mono text-2xs break-all text-left transition-colors hover:underline underline-offset-2 ${copiedId === photo.id ? 'text-green-400' : 'text-ink-secondary hover:text-ink'}`}
+                      title="Ver foto"
+                    >
                       {photo.id}
-                    </span>
-                    {copiedId === photo.id ? (
-                      <svg className="shrink-0 text-green-400" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    ) : (
-                      <svg className="shrink-0 text-ink-muted opacity-0 group-hover:opacity-100 transition-opacity" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                      </svg>
-                    )}
-                  </button>
+                    </button>
+                    <button
+                      onClick={() => copyId(photo.id)}
+                      className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Copiar UUID"
+                    >
+                      {copiedId === photo.id ? (
+                        <svg className="text-green-400" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      ) : (
+                        <svg className="text-ink-muted hover:text-ink transition-colors" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
 
                   <p className="text-xs text-ink truncate">{photo.ownerName}</p>
                   <p className="text-2xs text-ink-muted font-mono whitespace-nowrap">
