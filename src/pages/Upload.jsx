@@ -63,9 +63,6 @@ function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemov
         <div className="absolute inset-0 bg-base/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 pointer-events-none">
           <p className="text-2xs text-ink-secondary font-mono">{new Date(photo.createdAt).toLocaleDateString('pt-BR')}</p>
         </div>
-        <div className="absolute top-2 left-2 pointer-events-none">
-          <span className="font-mono text-2xs text-white/40">0{index + 1}</span>
-        </div>
         {canEdit && (
           <button
             onClick={(e) => { e.stopPropagation(); onDeletePhoto(photo.id); }}
@@ -97,11 +94,7 @@ function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemov
             </svg>
           </div>
         )}
-        <div className="absolute inset-0 bg-base/40 flex flex-col justify-between p-2 pointer-events-none">
-          <div className="flex justify-between items-start">
-            <span className="font-mono text-2xs text-white/40">0{index + 1}</span>
-          </div>
-        </div>
+        <div className="absolute inset-0 bg-base/40 pointer-events-none" />
         {!uploadingThis && (
           <button
             onClick={onRemovePending}
@@ -127,7 +120,6 @@ function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemov
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-ghost">
           <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
         </svg>
-        <span className="absolute top-2 left-2 font-mono text-2xs text-ink-ghost/40">0{index + 1}</span>
       </div>
     );
   }
@@ -143,7 +135,6 @@ function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemov
         </svg>
       </div>
       <p className="text-2xs text-ink-muted group-hover:text-ink-secondary transition-colors font-mono">escolher foto</p>
-      <span className="absolute top-2 left-2 font-mono text-2xs text-ink-ghost/40">0{index + 1}</span>
       <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} disabled={uploading} />
     </label>
   );

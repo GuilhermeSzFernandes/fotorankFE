@@ -689,6 +689,9 @@ export default function Admin() {
                   <div className="min-w-0">
                     <p className="text-sm text-ink truncate">{u.name}</p>
                     <p className="text-2xs text-ink-muted font-mono mt-0.5 truncate">{u.email}</p>
+                    {u.phone && (
+                      <p className="text-2xs text-ink-muted font-mono mt-0.5 truncate">{u.phone}</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
