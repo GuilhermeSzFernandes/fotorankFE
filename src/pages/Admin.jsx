@@ -1,6 +1,93 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import Avatar from '../components/Avatar';
+
+function PhotoModal({ photo, onClose }) {
+  const [grades, setGrades] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axios.get(`/api/admin/photos/${photo.id}/grades`)
+      .then(({ data }) => setGrades(data))
+      .catch(() => setGrades([]))
+      .finally(() => setLoading(false));
+  }, [photo.id]);
+
+  const handleBackdrop = useCallback((e) => {
+    if (e.target === e.currentTarget) onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      onClick={handleBackdrop}
+    >
+      <div className="relative flex flex-col md:flex-row w-full max-w-5xl max-h-[95vh] bg-surface rounded-sm overflow-hidden shadow-2xl mx-4">
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-sm bg-black/40 text-white hover:bg-black/60 transition-colors"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
+        <div className="md:w-3/5 bg-black flex items-center justify-center min-h-64">
+          {photo.url
+            ? <img src={photo.url} alt="" className="max-w-full max-h-[70vh] object-contain" />
+            : <div className="text-ink-ghost/30 text-xs font-mono">sem imagem</div>
+          }
+        </div>
+
+        <div className="md:w-2/5 flex flex-col overflow-y-auto">
+          <div className="px-6 pt-6 pb-4 border-b border-line">
+            <p className="text-sm font-medium text-ink">{photo.ownerName}</p>
+            <p className="text-2xs text-ink-muted font-mono mt-1">{photo.originalName}</p>
+            {photo.avgScore !== null && (
+              <div className="flex items-baseline gap-1 mt-4">
+                <span className="font-display italic text-5xl text-ink leading-none" style={{ letterSpacing: '-0.03em' }}>
+                  {photo.avgScore !== null ? photo.avgScore.toFixed(1) : '—'}
+                </span>
+                <span className="text-xs text-ink-muted font-mono">/10</span>
+                <span className="text-2xs text-ink-muted font-mono ml-2">
+                  {photo.gradeCount} avaliação{photo.gradeCount !== 1 ? 'ões' : ''}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1 px-6 py-4">
+            {loading ? (
+              <p className="text-xs text-ink-muted font-mono">carregando…</p>
+            ) : grades.length === 0 ? (
+              <p className="text-xs text-ink-muted font-mono">Nenhuma avaliação ainda.</p>
+            ) : (
+              <div className="flex flex-col gap-0">
+                {grades.map((g, i) => (
+                  <div key={i} className="flex items-start gap-3 py-3 border-b border-line last:border-0">
+                    <span className="font-mono text-sm font-bold text-ink-secondary shrink-0 w-10 text-right">{g.score.toFixed(1)}</span>
+                    <div className="flex-1 min-w-0">
+                      {g.comment
+                        ? <p className="text-xs text-ink-muted leading-relaxed">{g.comment}</p>
+                        : <p className="text-xs text-ink-ghost/40 italic font-mono">sem observação</p>
+                      }
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const PHASE_META = {
   waiting:      { label: 'Aguardando início',       color: 'text-ink-muted',    border: 'border-line',            bg: 'bg-surface' },
@@ -167,6 +254,7 @@ export default function Admin() {
   const [usersPage, setUsersPage] = useState(0);
   const [photosPage, setPhotosPage] = useState(0);
   const [copiedId, setCopiedId] = useState(null);
+  const [modalPhoto, setModalPhoto] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -276,6 +364,10 @@ export default function Admin() {
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-14">
+      {modalPhoto && (
+        <PhotoModal photo={modalPhoto} onClose={() => setModalPhoto(null)} />
+      )}
+
       <div className="mb-12">
         <p className="text-2xs text-ink-muted uppercase tracking-widest mb-4 enter-1">Sistema</p>
         <h1 className="font-display text-5xl italic text-ink leading-none enter-2" style={{ letterSpacing: '-0.02em' }}>
@@ -435,13 +527,14 @@ export default function Admin() {
           <h2 className="text-xs font-medium text-ink mb-1 uppercase tracking-wider">
             Fotos <span className="font-mono text-ink-muted font-normal">({photos.length})</span>
           </h2>
-          <p className="text-2xs text-ink-muted font-mono mb-6">Clique no UUID para copiar</p>
+          <p className="text-2xs text-ink-muted font-mono mb-6">Clique na foto para visualizar · Clique no UUID para copiar</p>
 
           {photos.length === 0 ? (
             <p className="text-xs text-ink-muted font-mono">— nenhuma foto cadastrada —</p>
           ) : (
             <div>
-              <div className="hidden md:grid grid-cols-[1fr_1fr_auto_auto_auto] gap-x-4 px-2 pb-2 border-b border-line text-2xs text-ink-muted uppercase tracking-wider">
+              <div className="hidden md:grid grid-cols-[auto_1fr_1fr_auto_auto_auto] gap-x-4 px-2 pb-2 border-b border-line text-2xs text-ink-muted uppercase tracking-wider">
+                <span></span>
                 <span>UUID</span>
                 <span>Participante</span>
                 <span>Data</span>
@@ -450,8 +543,19 @@ export default function Admin() {
               </div>
 
               {photosVisible.map((photo, i) => (
-                <div key={photo.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto_auto_auto] gap-x-4 items-center py-4 border-b border-line last:border-0 gap-y-1.5"
+                <div key={photo.id} className="grid grid-cols-1 md:grid-cols-[auto_1fr_1fr_auto_auto_auto] gap-x-4 items-center py-4 border-b border-line last:border-0 gap-y-1.5"
                   style={{ animation: `fadeUp 0.3s ease ${i * 25}ms both` }}>
+
+                  <button
+                    onClick={() => setModalPhoto(photo)}
+                    className="w-10 h-10 shrink-0 rounded-sm overflow-hidden bg-surface-raised border border-line hover:opacity-75 transition-opacity focus:outline-none focus:ring-2 focus:ring-ink/30"
+                    title="Ver foto"
+                  >
+                    {photo.url
+                      ? <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center text-ink-ghost/30 text-xs font-mono">—</div>
+                    }
+                  </button>
 
                   <button
                     onClick={() => copyId(photo.id)}
