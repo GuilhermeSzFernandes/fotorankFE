@@ -146,6 +146,28 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
             </div>
           </div>
 
+          {/* Indicador de salvo + desavaliar */}
+          {score != null && !saving[photo.id] && (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-2xs text-amber-400/70 font-mono">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                avaliada · {score}/10
+              </div>
+              {canGrade && (
+                <button
+                  onClick={() => onUngrade(photo.id)}
+                  className="text-2xs text-ink-muted hover:text-red-400 font-mono transition-colors"
+                  title="Remover avaliação"
+                >
+                  desavaliar
+                </button>
+              )}
+            </div>
+          )}
+          {saving[photo.id] && (
+            <p className="text-2xs text-ink-muted font-mono">salvando…</p>
+          )}
+
           {/* Estrelas */}
           <div>
             <p className="text-2xs text-ink-muted uppercase tracking-widest mb-3">Nota</p>
@@ -176,28 +198,6 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
                 </button>
               )}
             </div>
-          )}
-
-          {/* Indicador de salvo + desavaliar */}
-          {score != null && !saving[photo.id] && (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-2xs text-amber-400/70 font-mono">
-                <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                avaliada · {score}/10
-              </div>
-              {canGrade && (
-                <button
-                  onClick={() => onUngrade(photo.id)}
-                  className="text-2xs text-ink-muted hover:text-red-400 font-mono transition-colors"
-                  title="Remover avaliação"
-                >
-                  desavaliar
-                </button>
-              )}
-            </div>
-          )}
-          {saving[photo.id] && (
-            <p className="text-2xs text-ink-muted font-mono">salvando…</p>
           )}
         </div>
 
