@@ -199,22 +199,22 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
           {saving[photo.id] && (
             <p className="text-2xs text-ink-muted font-mono">salvando…</p>
           )}
-        </div>
 
-        {/* Navegação no rodapé */}
-        <div className="flex gap-2 px-5 py-4 border-t border-white/10">
-          <button onClick={prev} disabled={idx === 0} className="btn-ghost flex-1 justify-center disabled:opacity-30 text-xs">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            Anterior
-          </button>
-          <button onClick={next} disabled={idx === photos.length - 1} className="btn-ghost flex-1 justify-center disabled:opacity-30 text-xs">
-            Próxima
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
+          {/* Navegação */}
+          <div className="flex gap-2">
+            <button onClick={prev} disabled={idx === 0} className="btn-ghost flex-1 justify-center disabled:opacity-30 text-xs">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              Anterior
+            </button>
+            <button onClick={next} disabled={idx === photos.length - 1} className="btn-ghost flex-1 justify-center disabled:opacity-30 text-xs">
+              Próxima
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>,
