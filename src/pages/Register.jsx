@@ -4,6 +4,38 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { ETECS } from '../data/etecs';
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function formatCPF(value) {
+  return value
+    .replace(/\D/g, '')
+    .slice(0, 11)
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+}
+
+function formatPhone(value) {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 10)
+    return digits.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2$3').trim().replace(/-$/, '');
+  return digits.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').trim().replace(/-$/, '');
+}
+
+function isValidCPF(cpf) {
+  const digits = cpf.replace(/\D/g, '');
+  if (digits.length !== 11 || /^(\d)\1{10}$/.test(digits)) return false;
+
+  const calcCheck = (len) => {
+    let sum = 0;
+    for (let i = 0; i < len; i++) sum += Number(digits[i]) * (len + 1 - i);
+    const rest = (sum * 10) % 11;
+    return rest === 10 ? 0 : rest;
+  };
+
+  return calcCheck(9) === Number(digits[9]) && calcCheck(10) === Number(digits[10]);
+}
+
 export default function Register() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -18,12 +50,21 @@ export default function Register() {
     return (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
   }
 
+  function setCPF(e) {
+    setForm((f) => ({ ...f, cpf: formatCPF(e.target.value) }));
+  }
+
+  function setPhone(e) {
+    setForm((f) => ({ ...f, phone: formatPhone(e.target.value) }));
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    if (!EMAIL_RE.test(form.email.trim())) return setError('Informe um e-mail válido.');
     if (form.password !== form.confirm) return setError('As senhas não coincidem.');
-    if (!form.cpf.trim()) return setError('CPF é obrigatório.');
-    if (!form.phone.trim()) return setError('Telefone é obrigatório.');
+    if (!isValidCPF(form.cpf)) return setError('Informe um CPF válido.');
+    if (form.phone.replace(/\D/g, '').length < 10) return setError('Informe um telefone válido.');
     setLoading(true);
     try {
       const { data } = await axios.post('/api/auth/register', {
@@ -96,14 +137,14 @@ export default function Register() {
 
           <div>
             <label className="flabel">CPF</label>
-            <input type="text" className="field" placeholder="000.000.000-00"
-              value={form.cpf} onChange={set('cpf')} required />
+            <input type="text" className="field" placeholder="000.000.000-00" inputMode="numeric" maxLength={14}
+              value={form.cpf} onChange={setCPF} required />
           </div>
 
           <div>
             <label className="flabel">Telefone</label>
-            <input type="tel" className="field" placeholder="(00) 00000-0000"
-              value={form.phone} onChange={set('phone')} required />
+            <input type="tel" className="field" placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15}
+              value={form.phone} onChange={setPhone} required />
           </div>
 
           <div>
