@@ -335,7 +335,7 @@ export default function Upload() {
             className="btn-primary flex-1"
           >
             {uploading
-              ? `Enviando ${uploadingSlot + 1} de ${pendingCount}…`
+              ? 'Enviando…'
               : `Enviar ${pendingCount} foto${pendingCount > 1 ? 's' : ''}`}
           </button>
           <button
