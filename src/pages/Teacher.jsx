@@ -9,46 +9,64 @@ const PHASE_BANNER = {
   closed:       { text: 'O concurso foi encerrado. Não é mais possível alterar avaliações.',                             cls: 'text-green-500/80 border-green-900/30 bg-green-900/5' },
 };
 
+const LOCKED_MESSAGE = {
+  waiting:      'Concurso ainda não começou — avaliação indisponível',
+  registration: 'Inscrições em andamento — avaliação ainda não liberada',
+  closed:       'Concurso encerrado — avaliação bloqueada',
+};
+
 const PER_PAGE = 3;
 
 // ── Estrelas (1–10) ────────────────────────────────────────────────────────────
-function StarRating({ score, onChange, disabled }) {
+function StarRating({ score, onChange, disabled, locked, lockedMessage }) {
   const [hover, setHover] = useState(null);
   const display = hover ?? score ?? 0;
 
   return (
-    <div className="flex items-center gap-0.5 flex-wrap">
-      {Array.from({ length: 10 }, (_, i) => i + 1).map((star) => (
-        <button
-          key={star}
-          disabled={disabled}
-          onMouseEnter={() => setHover(star)}
-          onMouseLeave={() => setHover(null)}
-          onClick={() => onChange(star)}
-          className={`transition-all duration-75 disabled:opacity-50 ${
-            star <= display ? 'text-amber-400' : 'text-ink-muted/50 hover:text-amber-300'
-          } hover:scale-110 active:scale-95`}
-          title={`${star} ponto${star !== 1 ? 's' : ''}`}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24"
-            fill={star <= display ? 'currentColor' : 'none'}
-            stroke="currentColor" strokeWidth="1.5">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    <div>
+      <div className="flex items-center gap-0.5 flex-wrap">
+        {Array.from({ length: 10 }, (_, i) => i + 1).map((star) => (
+          <button
+            key={star}
+            disabled={disabled}
+            onMouseEnter={() => setHover(star)}
+            onMouseLeave={() => setHover(null)}
+            onClick={() => onChange(star)}
+            className={`transition-all duration-75 disabled:opacity-50 ${
+              star <= display ? 'text-amber-400' : 'text-ink-muted/50 hover:text-amber-300'
+            } hover:scale-110 active:scale-95`}
+            title={locked ? lockedMessage : `${star} ponto${star !== 1 ? 's' : ''}`}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24"
+              fill={star <= display ? 'currentColor' : 'none'}
+              stroke="currentColor" strokeWidth="1.5">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+          </button>
+        ))}
+        <span className={`ml-3 font-display italic text-2xl tabular-nums leading-none transition-colors duration-75 ${
+          hover != null ? 'text-amber-400' : score != null ? 'text-ink' : 'text-ink-ghost/25'
+        }`} style={{ letterSpacing: '-0.02em' }}>
+          {hover ?? score ?? '—'}
+          <span className="text-xs text-ink-muted not-italic font-mono">/10</span>
+        </span>
+      </div>
+      {locked && (
+        <p className="mt-2 flex items-center gap-1.5 text-2xs text-amber-400/90 font-mono">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="13" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
-        </button>
-      ))}
-      <span className={`ml-3 font-display italic text-2xl tabular-nums leading-none transition-colors duration-75 ${
-        hover != null ? 'text-amber-400' : score != null ? 'text-ink' : 'text-ink-ghost/25'
-      }`} style={{ letterSpacing: '-0.02em' }}>
-        {hover ?? score ?? '—'}
-        <span className="text-xs text-ink-muted not-italic font-mono">/10</span>
-      </span>
+          {lockedMessage}
+        </p>
+      )}
     </div>
   );
 }
 
 // ── Lightbox com navegação e avaliação ────────────────────────────────────────
-function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChange, onCommentChange, onCommentSave, onUngrade, onClose, canGrade }) {
+function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChange, onCommentChange, onCommentSave, onUngrade, onClose, canGrade, phase }) {
   const [idx, setIdx] = useState(initialIndex);
 
   // Fecha se não há mais fotos; ajusta índice se a lista encolheu
@@ -83,6 +101,18 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex bg-black/80 backdrop-blur-md" onClick={onClose}>
+
+      {/* Sair da tela cheia */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
+        title="Sair da tela cheia"
+        className="absolute left-3 top-3 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
+      </button>
 
       {/* Seta esquerda */}
       <button
@@ -153,6 +183,8 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
               score={score}
               onChange={(s) => onScoreChange(photo.id, s)}
               disabled={!!saving[photo.id] || !canGrade}
+              locked={!canGrade}
+              lockedMessage={LOCKED_MESSAGE[phase]}
             />
           </div>
 
@@ -223,7 +255,7 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
 }
 
 // ── Card de foto ───────────────────────────────────────────────────────────────
-function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChange, onCommentSave, onUngrade, onExpand, index, canGrade }) {
+function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChange, onCommentSave, onUngrade, onExpand, index, canGrade, phase }) {
   const graded = score != null;
   const commentDirty = comment !== (photo.myGrade?.comment ?? '');
 
@@ -286,7 +318,13 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
         {/* Estrelas — clique salva automaticamente */}
         <div>
           <p className="text-2xs text-ink-muted uppercase tracking-widest mb-2">Nota</p>
-          <StarRating score={score} onChange={(s) => onScoreChange(photo.id, s)} disabled={saving || !canGrade} />
+          <StarRating
+            score={score}
+            onChange={(s) => onScoreChange(photo.id, s)}
+            disabled={saving || !canGrade}
+            locked={!canGrade}
+            lockedMessage={LOCKED_MESSAGE[phase]}
+          />
         </div>
 
         {/* Comentário */}
@@ -490,6 +528,7 @@ export default function Teacher() {
           onUngrade={handleUngrade}
           onClose={() => setLightboxIdx(null)}
           canGrade={canGrade}
+          phase={phase}
         />
       )}
 
@@ -573,6 +612,7 @@ export default function Teacher() {
                   onUngrade={handleUngrade}
                   onExpand={(p) => setLightboxIdx(filtered.findIndex((f) => f.id === p.id))}
                   canGrade={canGrade}
+                  phase={phase}
                 />
               ))}
             </div>
