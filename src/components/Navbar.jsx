@@ -36,9 +36,15 @@ export default function Navbar() {
     <header className="border-b border-line bg-base/90 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-5xl mx-auto px-6 h-12 flex items-center justify-between gap-6">
 
-        <Link to="/login" className="font-display text-xl italic text-ink leading-none shrink-0" style={{ letterSpacing: '-0.02em' }}>
-          FotoRank
-        </Link>
+        {user ? (
+          <span className="font-display text-xl italic text-ink leading-none shrink-0 select-none" style={{ letterSpacing: '-0.02em' }}>
+            FotoRank
+          </span>
+        ) : (
+          <Link to="/login" className="font-display text-xl italic text-ink leading-none shrink-0" style={{ letterSpacing: '-0.02em' }}>
+            FotoRank
+          </Link>
+        )}
 
         <nav className="flex items-center gap-0.5 flex-1">
           {links.map(({ to, label }) => (

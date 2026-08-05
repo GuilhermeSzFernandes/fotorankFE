@@ -43,6 +43,7 @@ export default function Register() {
     name: '', email: '', password: '', confirm: '',
     etec: '', studentType: '', cpf: '', phone: '',
   });
+  const [consent, setConsent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -65,6 +66,7 @@ export default function Register() {
     if (form.password !== form.confirm) return setError('As senhas não coincidem.');
     if (!isValidCPF(form.cpf)) return setError('Informe um CPF válido.');
     if (form.phone.replace(/\D/g, '').length < 10) return setError('Informe um telefone válido.');
+    if (!consent) return setError('É necessário aceitar a cessão dos direitos de uso de imagem.');
     setLoading(true);
     try {
       const { data } = await axios.post('/api/auth/register', {
@@ -75,6 +77,7 @@ export default function Register() {
         studentType: form.studentType || null,
         cpf: form.cpf.trim(),
         phone: form.phone.trim(),
+        imageRightsConsent: consent,
       });
       login(data.user);
       navigate('/upload');
@@ -159,7 +162,22 @@ export default function Register() {
               value={form.confirm} onChange={set('confirm')} required />
           </div>
 
-          <button type="submit" className="btn-primary w-full mt-2" disabled={loading}>
+          <label className="flex items-start gap-2.5 cursor-pointer pt-1 select-none">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              className="mt-0.5 shrink-0 accent-ink w-4 h-4 cursor-pointer"
+              required
+            />
+            <span className="text-2xs text-ink-secondary leading-relaxed">
+              Estou ciente e concordo em participar do concurso, cedendo os direitos de uso das imagens
+              enviadas para exposição dos vencedores, criação de materiais como fotobooks e demais
+              divulgações do evento.
+            </span>
+          </label>
+
+          <button type="submit" className="btn-primary w-full mt-2" disabled={loading || !consent}>
             {loading ? 'Criando conta…' : 'Criar conta'}
           </button>
         </form>

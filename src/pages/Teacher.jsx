@@ -176,6 +176,30 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
             </div>
           </div>
 
+          {/* Detalhes da foto */}
+          {(photo.location || photo.equipment || photo.description) && (
+            <div className="flex flex-col gap-3 pb-1 border-b border-white/10">
+              {photo.location && (
+                <div>
+                  <p className="text-2xs text-ink-muted uppercase tracking-widest mb-1">Local</p>
+                  <p className="text-xs text-ink-secondary">{photo.location}</p>
+                </div>
+              )}
+              {photo.equipment && (
+                <div>
+                  <p className="text-2xs text-ink-muted uppercase tracking-widest mb-1">Equipamento</p>
+                  <p className="text-xs text-ink-secondary">{photo.equipment}</p>
+                </div>
+              )}
+              {photo.description && (
+                <div>
+                  <p className="text-2xs text-ink-muted uppercase tracking-widest mb-1">Descrição</p>
+                  <p className="text-xs text-ink-secondary whitespace-pre-wrap">{photo.description}</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Estrelas */}
           <div>
             <p className="text-2xs text-ink-muted uppercase tracking-widest mb-3">Nota</p>

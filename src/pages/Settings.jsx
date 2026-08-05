@@ -62,6 +62,10 @@ export default function Settings() {
   async function handleAvatarChange(e) {
     const file = e.target.files[0];
     if (!file) return;
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      setProfileError('Apenas imagens JPG ou PNG são aceitas.');
+      return;
+    }
     const fd = new FormData();
     fd.append('avatar', file);
     try {
@@ -151,13 +155,13 @@ export default function Settings() {
                   <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                   <circle cx="12" cy="13" r="4" />
                 </svg>
-                <input ref={avatarRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleAvatarChange} />
+                <input ref={avatarRef} type="file" accept="image/jpeg,image/png" className="hidden" onChange={handleAvatarChange} />
               </label>
             </div>
             <div>
               <p className="text-sm font-medium text-ink">{user?.name}</p>
               <p className="text-xs text-ink-secondary mt-0.5">{user?.email}</p>
-              <p className="text-2xs text-ink-muted font-mono mt-2">Clique na foto para alterar · JPEG, PNG, WebP · máx. 5 MB</p>
+              <p className="text-2xs text-ink-muted font-mono mt-2">Clique na foto para alterar · JPG, PNG · máx. 5 MB</p>
             </div>
           </div>
 

@@ -38,14 +38,129 @@ function FullscreenModal({ photo, onClose }) {
         className="max-w-full max-h-full object-contain select-none"
         style={{ maxHeight: '95vh', maxWidth: '95vw' }}
       />
-      <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-2xs text-white/40 font-mono">
+      {(photo.location || photo.equipment || photo.description) && (
+        <div className="absolute bottom-4 left-4 max-w-sm flex flex-col gap-2 bg-black/50 backdrop-blur-sm rounded-sm px-4 py-3 pointer-events-none">
+          {photo.location && (
+            <div>
+              <p className="text-2xs text-white/40 uppercase tracking-widest">Local</p>
+              <p className="text-xs text-white/80">{photo.location}</p>
+            </div>
+          )}
+          {photo.equipment && (
+            <div>
+              <p className="text-2xs text-white/40 uppercase tracking-widest">Equipamento</p>
+              <p className="text-xs text-white/80">{photo.equipment}</p>
+            </div>
+          )}
+          {photo.description && (
+            <div>
+              <p className="text-2xs text-white/40 uppercase tracking-widest">Descrição</p>
+              <p className="text-xs text-white/80 whitespace-pre-wrap">{photo.description}</p>
+            </div>
+          )}
+        </div>
+      )}
+      <p className="absolute bottom-4 right-4 text-2xs text-white/40 font-mono">
         {photo.originalName}
       </p>
     </div>
   );
 }
 
-function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemovePending, onDeletePhoto, onPhotoClick, fileRef, index, canEdit }) {
+function DetailsModal({ slotIndex, pending, onSave, onClose }) {
+  const [location, setLocation]       = useState(pending.location || '');
+  const [equipment, setEquipment]     = useState(pending.equipment || '');
+  const [description, setDescription] = useState(pending.description || '');
+
+  const handleBackdrop = useCallback((e) => {
+    if (e.target === e.currentTarget) onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  function handleSave() {
+    onSave(slotIndex, {
+      location: location.trim(),
+      equipment: equipment.trim(),
+      description: description.trim(),
+    });
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+      onClick={handleBackdrop}
+    >
+      <div className="bg-base border border-line rounded-sm w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-line">
+          <p className="text-2xs text-ink-muted uppercase tracking-widest">Detalhes da foto</p>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-full bg-surface border border-line flex items-center justify-center text-ink-muted hover:text-ink transition-colors"
+            title="Fechar"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="p-5 flex flex-col gap-4">
+          <div className="aspect-video overflow-hidden rounded-sm border border-line bg-surface">
+            <img src={pending.previewUrl} alt="pré-visualização" className="w-full h-full object-contain" />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-2xs text-ink-muted uppercase tracking-widest">Local</label>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              maxLength={120}
+              placeholder="Onde a foto foi tirada"
+              className="field py-2 text-xs"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-2xs text-ink-muted uppercase tracking-widest">Equipamento</label>
+            <input
+              type="text"
+              value={equipment}
+              onChange={(e) => setEquipment(e.target.value)}
+              maxLength={120}
+              placeholder="Câmera, lente, etc."
+              className="field py-2 text-xs"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-2xs text-ink-muted uppercase tracking-widest">Descrição</label>
+            <textarea
+              rows={4}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              maxLength={500}
+              placeholder="Conte sobre a foto (opcional)"
+              className="field py-2 text-xs resize-none"
+            />
+            <p className="text-2xs text-ink-ghost font-mono self-end">{description.length}/500</p>
+          </div>
+
+          <button onClick={handleSave} className="btn-primary">
+            Salvar detalhes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemovePending, onEditPending, onDeletePhoto, onPhotoClick, fileRef, index, canEdit }) {
   // Foto já confirmada
   if (photo) {
     return (
@@ -82,11 +197,19 @@ function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemov
 
   // Preview pendente
   if (pending) {
+    const hasDetails = !!(pending.location || pending.equipment || pending.description);
     return (
       <div className="relative aspect-square overflow-hidden rounded-sm border border-ink-muted/40 group"
         style={{ animation: `fadeUp 0.3s cubic-bezier(0.16,1,0.3,1) both` }}
       >
-        <img src={pending.previewUrl} alt="pré-visualização" className="w-full h-full object-cover" />
+        <button
+          onClick={onEditPending}
+          disabled={uploadingThis}
+          className="w-full h-full focus:outline-none cursor-pointer"
+          title="Adicionar detalhes (local, equipamento, descrição)"
+        >
+          <img src={pending.previewUrl} alt="pré-visualização" className="w-full h-full object-cover" />
+        </button>
         {uploadingThis && (
           <div className="absolute inset-0 bg-base/60 flex items-center justify-center">
             <svg className="animate-spin text-white" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -94,10 +217,28 @@ function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemov
             </svg>
           </div>
         )}
-        <div className="absolute inset-0 bg-base/40 pointer-events-none" />
+        {!uploadingThis && (
+          <div className="absolute inset-x-0 bottom-0 flex items-center gap-1.5 px-2 py-1.5 bg-base/70 pointer-events-none">
+            {hasDetails ? (
+              <>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-500/90 shrink-0">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span className="text-2xs text-ink-secondary font-mono truncate">detalhes</span>
+              </>
+            ) : (
+              <>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink-muted shrink-0">
+                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span className="text-2xs text-ink-muted font-mono truncate">detalhes</span>
+              </>
+            )}
+          </div>
+        )}
         {!uploadingThis && (
           <button
-            onClick={onRemovePending}
+            onClick={(e) => { e.stopPropagation(); onRemovePending(); }}
             className="absolute top-2 right-2 w-6 h-6 rounded-full bg-base/80 border border-line flex items-center justify-center text-ink-muted hover:text-ink hover:border-ink-secondary transition-colors"
             title="Remover"
           >
@@ -135,7 +276,7 @@ function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemov
         </svg>
       </div>
       <p className="text-2xs text-ink-muted group-hover:text-ink-secondary transition-colors font-mono">escolher foto</p>
-      <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} disabled={uploading} />
+      <input ref={fileRef} type="file" accept="image/jpeg,image/png" className="hidden" onChange={onFile} disabled={uploading} />
     </label>
   );
 }
@@ -150,6 +291,7 @@ export default function Upload() {
   const [success, setSuccess] = useState('');
   const [phase, setPhase] = useState(null);
   const [modalPhoto, setModalPhoto] = useState(null);
+  const [detailsSlot, setDetailsSlot] = useState(null);
   const fileRefs = [useRef(), useRef(), useRef()];
 
   const canEdit = phase === 'registration';
@@ -187,6 +329,12 @@ export default function Upload() {
     setError('');
     setSuccess('');
 
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      setError('Apenas imagens JPG ou PNG são aceitas.');
+      if (fileRefs[slotIndex].current) fileRefs[slotIndex].current.value = '';
+      return;
+    }
+
     const previewUrl = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
@@ -199,7 +347,7 @@ export default function Upload() {
       // Revoga preview anterior deste slot, se existir
       setPendings((prev) => {
         if (prev[slotIndex]) URL.revokeObjectURL(prev[slotIndex].previewUrl);
-        return { ...prev, [slotIndex]: { file, previewUrl } };
+        return { ...prev, [slotIndex]: { file, previewUrl, location: '', equipment: '', description: '' } };
       });
       if (fileRefs[slotIndex].current) fileRefs[slotIndex].current.value = '';
     };
@@ -209,6 +357,14 @@ export default function Upload() {
       if (fileRefs[slotIndex].current) fileRefs[slotIndex].current.value = '';
     };
     img.src = previewUrl;
+  }
+
+  function handleSaveDetails(slotIndex, values) {
+    setPendings((prev) => {
+      if (!prev[slotIndex]) return prev;
+      return { ...prev, [slotIndex]: { ...prev[slotIndex], ...values } };
+    });
+    setDetailsSlot(null);
   }
 
   function handleRemovePending(slotIndex) {
@@ -243,10 +399,13 @@ export default function Upload() {
     let sent = 0;
 
     for (const slot of slots) {
-      const { file, previewUrl } = pendings[slot];
+      const { file, previewUrl, location, equipment, description } = pendings[slot];
       setUploadingSlot(slot);
       const fd = new FormData();
       fd.append('photo', file);
+      if (location)    fd.append('location', location);
+      if (equipment)   fd.append('equipment', equipment);
+      if (description) fd.append('description', description);
       try {
         await axios.post('/api/photos', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
         URL.revokeObjectURL(previewUrl);
@@ -279,6 +438,15 @@ export default function Upload() {
         <FullscreenModal photo={modalPhoto} onClose={() => setModalPhoto(null)} />
       )}
 
+      {detailsSlot !== null && pendings[detailsSlot] && (
+        <DetailsModal
+          slotIndex={detailsSlot}
+          pending={pendings[detailsSlot]}
+          onSave={handleSaveDetails}
+          onClose={() => setDetailsSlot(null)}
+        />
+      )}
+
       <div className="mb-12">
         <p className="text-2xs text-ink-muted uppercase tracking-widest mb-4 enter-1">Portfólio</p>
         <h1 className="font-display text-5xl italic text-ink leading-none enter-2" style={{ letterSpacing: '-0.02em' }}>
@@ -286,7 +454,7 @@ export default function Upload() {
         </h1>
         <p className="text-xs text-ink-secondary mt-3 enter-3">
           {user?.name} · {photos.length}/3 enviadas
-          {canEdit && remaining > 0 && ` · ${remaining} vaga${remaining > 1 ? 's' : ''} disponível`}
+          {canEdit && remaining > 0 && ` · ${remaining} ${remaining > 1 ? 'envios disponíveis' : 'envio disponível'}`}
         </p>
       </div>
 
@@ -318,6 +486,7 @@ export default function Upload() {
             uploadingThis={uploadingSlot === i}
             onFile={(e) => handleFileSelect(i, e)}
             onRemovePending={() => handleRemovePending(i)}
+            onEditPending={() => setDetailsSlot(i)}
             onDeletePhoto={handleDeletePhoto}
             onPhotoClick={setModalPhoto}
             fileRef={fileRefs[i]}
@@ -358,7 +527,7 @@ export default function Upload() {
       )}
 
       <div className="mt-14 pt-6 border-t border-line enter-5">
-        <p className="text-2xs text-ink-muted">JPEG · PNG · WebP · máx. 30 MB · mín. 800×600 px</p>
+        <p className="text-2xs text-ink-muted">JPG · PNG · máx. 30 MB · mín. 800×600 px</p>
       </div>
 
     </div>
