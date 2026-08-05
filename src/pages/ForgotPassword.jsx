@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 export default function ForgotPassword() {
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null); // { resetToken, resetUrl }
+  const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
 
   async function handleSubmit(e) {
@@ -14,8 +13,8 @@ export default function ForgotPassword() {
     setError('');
     setLoading(true);
     try {
-      const { data } = await axios.post('/api/auth/forgot-password', { email });
-      setResult(data);
+      await axios.post('/api/auth/forgot-password', { email });
+      setSent(true);
     } catch (err) {
       setError(err.response?.data?.message || 'Erro ao processar solicitação.');
     } finally {
@@ -23,40 +22,31 @@ export default function ForgotPassword() {
     }
   }
 
-  if (result) {
+  if (sent) {
     return (
       <div className="min-h-[calc(100vh-48px)] flex items-center justify-center px-4">
         <div className="w-full max-w-xs enter-1">
           <div className="mb-8">
             <p className="text-2xs text-ink-muted uppercase tracking-widest mb-4">Recuperação</p>
             <h1 className="font-display text-4xl italic text-ink leading-none mb-3" style={{ letterSpacing: '-0.02em' }}>
-              Link gerado
+              Verifique seu e-mail
             </h1>
-            <p className="text-xs text-ink-secondary">
-              Em produção, o link seria enviado ao e-mail. Para fins de demonstração:
+            <p className="text-xs text-ink-secondary leading-relaxed">
+              Se este e-mail estiver cadastrado, você receberá um link para redefinir sua senha.
+              Confira sua caixa de entrada e a pasta de spam. O link é válido por 1 hora.
             </p>
           </div>
 
-          <div className="panel mb-6">
-            <p className="text-2xs text-ink-muted uppercase tracking-widest mb-3">Link de recuperação</p>
-            <div
-              onClick={() => navigate(result.resetUrl)}
-              className="cursor-pointer font-mono text-xs text-ink-secondary break-all hover:text-ink transition-colors underline underline-offset-4 decoration-line-strong"
-            >
-              {result.resetUrl}
-            </div>
-          </div>
-
-          <button
-            onClick={() => navigate(result.resetUrl)}
-            className="btn-primary w-full mb-4"
-          >
-            Ir para redefinição →
-          </button>
-
-          <Link to="/login" className="block text-center text-xs text-ink-muted hover:text-ink transition-colors">
+          <Link to="/login" className="btn-primary w-full block text-center mb-4">
             Voltar ao login
           </Link>
+
+          <button
+            onClick={() => { setSent(false); setEmail(''); }}
+            className="block w-full text-center text-xs text-ink-muted hover:text-ink transition-colors"
+          >
+            Usar outro e-mail
+          </button>
         </div>
       </div>
     );
