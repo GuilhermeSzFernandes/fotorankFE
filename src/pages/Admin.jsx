@@ -182,7 +182,6 @@ function KPI({ label, value, note, delay = 0 }) {
 const ROLE_LABEL = { admin: 'Admin', teacher: 'Professor', participant: 'Participante' };
 const ROLE_CHIP  = { admin: 'chip-red', teacher: 'chip-green', participant: 'chip-default' };
 
-// ── Dropdown de 3 pontos ───────────────────────────────────────────────────────
 function UserMenu({ user, onRoleChange }) {
   const [open, setOpen] = useState(false);
   const ref = useRef();
@@ -240,7 +239,6 @@ function toLocalInput(isoStr) {
   if (!isoStr) return '';
   const d = new Date(isoStr);
   if (isNaN(d)) return '';
-  // datetime-local expects "YYYY-MM-DDTHH:mm"
   const pad = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
@@ -259,7 +257,6 @@ export default function Admin() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Contest state
   const [contest, setContest] = useState(null);
   const [contestDates, setContestDates] = useState({ registration_start: '', registration_end: '', evaluation_start: '', evaluation_end: '' });
   const [contestLoading, setContestLoading] = useState(false);
@@ -417,7 +414,6 @@ export default function Admin() {
 
       {tab === 'contest' && contest && (
         <div className="space-y-6 enter-1">
-          {/* Status atual */}
           <div className={`panel border ${PHASE_META[contest.phase]?.border ?? 'border-line'} ${PHASE_META[contest.phase]?.bg ?? ''}`}>
             <p className="text-2xs text-ink-muted uppercase tracking-widest mb-2">Status do concurso</p>
             <p className={`font-display text-3xl italic leading-none ${PHASE_META[contest.phase]?.color ?? 'text-ink'}`}
@@ -426,7 +422,6 @@ export default function Admin() {
             </p>
           </div>
 
-          {/* Switch de fase manual */}
           <div className="panel">
             <PhaseSwitch
               current={contest.phase}
@@ -436,7 +431,6 @@ export default function Admin() {
             />
           </div>
 
-          {/* Visibilidade do ranking */}
           <div className="panel">
             <div className="flex items-center justify-between">
               <div>
@@ -465,7 +459,6 @@ export default function Admin() {
             </div>
           </div>
 
-          {/* Configuração de datas */}
           <div className="panel">
             <h2 className="text-xs font-medium text-ink mb-1 uppercase tracking-wider">Configurar datas</h2>
             <p className="text-2xs text-ink-muted font-mono mb-6">

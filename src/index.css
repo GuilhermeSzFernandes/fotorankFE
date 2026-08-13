@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Valores iniciais (dark) — o JS sobrescreve via element.style.setProperty */
 :root {
   --base:           8   8   8;
   --surface:        17  17  17;
@@ -34,7 +33,7 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-size: 118.75%; /* 19px — escala todo o app (rem), textos e componentes maiores sem precisar de zoom */
+    font-size: 118.75%;
   }
 
   body {
@@ -44,7 +43,6 @@
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 
-  /* Atmospheric grain */
   body::after {
     content: '';
     position: fixed;
@@ -62,7 +60,6 @@
 }
 
 @layer components {
-  /* ── Buttons ── */
   .btn {
     @apply inline-flex items-center justify-center gap-2 font-sans font-medium
            transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed select-none cursor-pointer;
@@ -82,7 +79,6 @@
            px-3 py-1.5 text-xs rounded-sm;
   }
 
-  /* ── Fields ── */
   .field {
     @apply w-full bg-surface-high border border-line-strong rounded-sm px-3 py-2.5
            text-ink placeholder-ink-muted text-xs
@@ -96,17 +92,14 @@
     @apply block text-2xs text-ink-secondary font-medium uppercase mb-2;
   }
 
-  /* ── Panels ── */
   .panel    { @apply bg-surface border border-line rounded-lg p-6; }
   .panel-sm { @apply bg-surface border border-line rounded-lg p-4; }
 
-  /* ── Chips ── */
   .chip         { @apply inline-flex items-center rounded-sm px-2 py-0.5 text-2xs font-medium; }
   .chip-default { @apply chip border border-line-strong text-ink-secondary; }
   .chip-green   { @apply chip border border-success-border text-success; }
   .chip-red     { @apply chip border border-danger-border text-danger; }
 
-  /* ── Staggered entrance ── */
   .enter-1 { animation: fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) 0ms   both; }
   .enter-2 { animation: fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) 60ms  both; }
   .enter-3 { animation: fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) 120ms both; }

@@ -161,7 +161,6 @@ function DetailsModal({ slotIndex, pending, onSave, onClose }) {
 }
 
 function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemovePending, onEditPending, onDeletePhoto, onPhotoClick, fileRef, index, canEdit }) {
-  // Foto já confirmada
   if (photo) {
     return (
       <div
@@ -195,7 +194,6 @@ function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemov
     );
   }
 
-  // Preview pendente
   if (pending) {
     const hasDetails = !!(pending.location || pending.equipment || pending.description);
     return (
@@ -251,7 +249,6 @@ function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemov
     );
   }
 
-  // Slot vazio — clicável apenas se inscrições abertas
   if (!canEdit) {
     return (
       <div
@@ -316,7 +313,6 @@ export default function Upload() {
 
   useEffect(() => { loadPhotos(); loadPhase(); }, []);
 
-  // Revoga URLs ao desmontar
   useEffect(() => {
     return () => {
       Object.values(pendings).forEach((p) => URL.revokeObjectURL(p.previewUrl));
@@ -344,7 +340,6 @@ export default function Upload() {
         if (fileRefs[slotIndex].current) fileRefs[slotIndex].current.value = '';
         return;
       }
-      // Revoga preview anterior deste slot, se existir
       setPendings((prev) => {
         if (prev[slotIndex]) URL.revokeObjectURL(prev[slotIndex].previewUrl);
         return { ...prev, [slotIndex]: { file, previewUrl, location: '', equipment: '', description: '' } };
@@ -495,7 +490,6 @@ export default function Upload() {
         ))}
       </div>
 
-      {/* Ações */}
       {pendingCount > 0 && canEdit && (
         <div className="flex items-center gap-3 mb-6 enter-1">
           <button

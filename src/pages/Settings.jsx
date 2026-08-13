@@ -15,7 +15,6 @@ function ThemeCard({ mode, label, current, onSelect }) {
         selected ? 'border-ink' : 'border-line hover:border-line-strong'
       }`}
     >
-      {/* Mini preview */}
       <div className={`w-full h-24 p-3 ${isDark ? 'bg-[#080808]' : 'bg-[#F7F7F5]'}`}>
         <div className={`h-1.5 w-16 rounded-full mb-2 ${isDark ? 'bg-[#E8E8E8]/20' : 'bg-[#1A1A1A]/15'}`} />
         <div className={`h-1 w-10 rounded-full mb-3 ${isDark ? 'bg-[#E8E8E8]/10' : 'bg-[#1A1A1A]/08'}`} />
@@ -44,14 +43,12 @@ export default function Settings() {
   const { theme, setTheme } = useTheme();
   const [tab, setTab] = useState('profile');
 
-  // Profile state
   const [name, setName] = useState(user?.name || '');
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileMsg, setProfileMsg] = useState('');
   const [profileError, setProfileError] = useState('');
   const avatarRef = useRef();
 
-  // Security state
   const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
   const [pwLoading, setPwLoading] = useState(false);
   const [pwMsg, setPwMsg] = useState('');
@@ -127,7 +124,6 @@ export default function Settings() {
         </h1>
       </div>
 
-      {/* Tabs */}
       <div className="flex items-center gap-0 border-b border-line mb-10 enter-3">
         {TABS.map(([v, l]) => (
           <button
@@ -142,10 +138,8 @@ export default function Settings() {
         ))}
       </div>
 
-      {/* ── PROFILE ── */}
       {tab === 'profile' && (
         <div className="enter-1">
-          {/* Avatar */}
           <div className="flex items-center gap-6 mb-8 pb-8 border-b border-line">
             <div className="relative group">
               <Avatar name={user?.name} avatar={user?.avatar} size="2xl" />
@@ -165,7 +159,6 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* Name form */}
           {(profileMsg || profileError) && (
             <div className={`text-xs mb-5 px-3 py-2.5 border rounded-sm ${
               profileError
@@ -199,7 +192,6 @@ export default function Settings() {
         </div>
       )}
 
-      {/* ── APPEARANCE ── */}
       {tab === 'appearance' && (
         <div className="enter-1">
           <p className="text-xs text-ink-secondary mb-6">
@@ -212,7 +204,6 @@ export default function Settings() {
         </div>
       )}
 
-      {/* ── SECURITY ── */}
       {tab === 'security' && (
         <div className="enter-1">
           <p className="text-xs text-ink-secondary mb-6">Altere a senha da sua conta.</p>

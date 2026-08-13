@@ -34,7 +34,6 @@ function PhotoModal({ entry, onClose }) {
       onClick={handleBackdrop}
     >
       <div className="relative flex flex-col md:flex-row w-full max-w-5xl max-h-[95vh] bg-surface rounded-sm overflow-hidden shadow-2xl mx-4">
-        {/* Botão fechar */}
         <button
           onClick={onClose}
           className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-sm bg-black/40 text-white hover:bg-black/60 transition-colors"
@@ -44,7 +43,6 @@ function PhotoModal({ entry, onClose }) {
           </svg>
         </button>
 
-        {/* Foto */}
         <div className="md:w-3/5 bg-black flex items-center justify-center min-h-64">
           {entry.url
             ? <img src={entry.url} alt="" className="max-w-full max-h-[70vh] object-contain" />
@@ -52,9 +50,7 @@ function PhotoModal({ entry, onClose }) {
           }
         </div>
 
-        {/* Painel lateral */}
         <div className="md:w-2/5 flex flex-col overflow-y-auto">
-          {/* Cabeçalho */}
           <div className="px-6 pt-6 pb-4 border-b border-line">
             <div className="flex items-center gap-3">
               <Avatar name={entry.name} avatar={entry.avatar} size="sm" />
@@ -78,7 +74,6 @@ function PhotoModal({ entry, onClose }) {
             )}
           </div>
 
-          {/* Notas */}
           <div className="flex-1 px-6 py-4">
             {loading ? (
               <p className="text-xs text-ink-muted font-mono">carregando…</p>
@@ -236,14 +231,14 @@ export default function Ranking() {
   const pageEntries = byPhoto.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
   return (
-    <div className="max-w-2xl mx-auto px-6 pb-14">
+    <div className="max-w-2xl mx-auto px-6 pt-5 pb-14">
       {modalEntry && (
         <PhotoModal entry={modalEntry} onClose={() => setModalEntry(null)} />
       )}
 
       <div className="flex items-end justify-between mb-10 flex-wrap gap-6">
         <div className="enter-1">
-          <p className="text-2xs text-ink-muted uppercase tracking-widest mb-4">Concurso</p>
+          <p className="text-2xs text-ink-muted uppercase tracking-widest mb-1">Concurso</p>
           <h1 className="font-display text-5xl italic text-ink leading-none" style={{ letterSpacing: '-0.02em' }}>
             Ranking
           </h1>

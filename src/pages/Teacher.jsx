@@ -17,7 +17,6 @@ const LOCKED_MESSAGE = {
 
 const PER_PAGE = 3;
 
-// ── Estrelas (1–10) ────────────────────────────────────────────────────────────
 function StarRating({ score, onChange, disabled, locked, lockedMessage }) {
   const [hover, setHover] = useState(null);
   const display = hover ?? score ?? 0;
@@ -65,11 +64,9 @@ function StarRating({ score, onChange, disabled, locked, lockedMessage }) {
   );
 }
 
-// ── Lightbox com navegação e avaliação ────────────────────────────────────────
 function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChange, onCommentChange, onCommentSave, onUngrade, onClose, canGrade, phase }) {
   const [idx, setIdx] = useState(initialIndex);
 
-  // Fecha se não há mais fotos; ajusta índice se a lista encolheu
   useEffect(() => {
     if (photos.length === 0) { onClose(); return; }
     if (idx >= photos.length) setIdx(photos.length - 1);
@@ -102,7 +99,6 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
   return createPortal(
     <div className="fixed inset-0 z-50 flex bg-black/80 backdrop-blur-md" onClick={onClose}>
 
-      {/* Sair da tela cheia */}
       <button
         onClick={(e) => { e.stopPropagation(); onClose(); }}
         title="Sair da tela cheia"
@@ -114,7 +110,6 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
         </svg>
       </button>
 
-      {/* Seta esquerda */}
       <button
         onClick={(e) => { e.stopPropagation(); prev(); }}
         disabled={idx === 0}
@@ -125,7 +120,6 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
         </svg>
       </button>
 
-      {/* Seta direita */}
       <button
         onClick={(e) => { e.stopPropagation(); next(); }}
         disabled={idx === photos.length - 1}
@@ -136,7 +130,6 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
         </svg>
       </button>
 
-      {/* Foto */}
       <div
         className="flex-1 flex items-center justify-center p-6 sm:p-10"
         onClick={(e) => e.stopPropagation()}
@@ -149,12 +142,10 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
         />
       </div>
 
-      {/* Painel lateral */}
       <div
         className="w-72 sm:w-80 shrink-0 bg-base/95 border-l border-white/10 flex flex-col overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Cabeçalho */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
           <span className="text-2xs text-white/40 font-mono">{idx + 1} / {photos.length}</span>
           <button
@@ -168,7 +159,6 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
         </div>
 
         <div className="flex flex-col gap-5 p-5 flex-1">
-          {/* Dono */}
           <div className="flex items-center gap-2.5">
             <Avatar name={photo.ownerName} avatar={photo.ownerAvatar} size="md" />
             <div className="min-w-0">
@@ -176,7 +166,6 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
             </div>
           </div>
 
-          {/* Detalhes da foto */}
           {(photo.location || photo.equipment || photo.description) && (
             <div className="flex flex-col gap-3 pb-1 border-b border-white/10">
               {photo.location && (
@@ -200,7 +189,6 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
             </div>
           )}
 
-          {/* Estrelas */}
           <div>
             <p className="text-2xs text-ink-muted uppercase tracking-widest mb-3">Nota</p>
             <StarRating
@@ -212,7 +200,6 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
             />
           </div>
 
-          {/* Comentário */}
           {canGrade && (
             <div className="flex flex-col gap-2">
               <textarea
@@ -234,7 +221,6 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
             </div>
           )}
 
-          {/* Indicador de salvo + desavaliar */}
           {score != null && !saving[photo.id] && (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-2xs text-warning font-mono">
@@ -256,7 +242,6 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
             <p className="text-2xs text-ink-muted font-mono">salvando…</p>
           )}
 
-          {/* Navegação */}
           <div className="flex gap-2">
             <button onClick={prev} disabled={idx === 0} className="btn-ghost flex-1 justify-center disabled:opacity-30 text-xs">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -278,7 +263,6 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
   );
 }
 
-// ── Card de foto ───────────────────────────────────────────────────────────────
 function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChange, onCommentSave, onUngrade, onExpand, index, canGrade, phase }) {
   const graded = score != null;
   const commentDirty = comment !== (photo.myGrade?.comment ?? '');
@@ -292,7 +276,6 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
       }`}
       style={{ animation: `fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) ${index * 70}ms both` }}
     >
-      {/* Imagem clicável */}
       <div
         className="relative overflow-hidden cursor-zoom-in group"
         style={{ aspectRatio: '4/3' }}
@@ -304,14 +287,12 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
         />
 
-        {/* Badge de nota salva */}
         {graded && (
           <div className="absolute top-2.5 right-2.5 bg-base/85 border border-warning-border rounded-sm px-2 py-0.5">
             <span className="font-mono text-xs text-warning tabular-nums">{score}<span className="text-ink-muted">/10</span></span>
           </div>
         )}
 
-        {/* Ícone de zoom */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/15">
           <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
@@ -323,15 +304,12 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
           </div>
         </div>
 
-        {/* Indicador "avaliada" */}
         {graded && (
           <div className="absolute top-2.5 left-2.5 w-2 h-2 rounded-full bg-warning" title="Avaliada" />
         )}
       </div>
 
-      {/* Info + avaliação */}
       <div className="p-4 flex flex-col gap-3 flex-1">
-        {/* Dono */}
         <div className="flex items-center gap-2.5">
           <Avatar name={photo.ownerName} avatar={photo.ownerAvatar} size="sm" />
           <div className="min-w-0">
@@ -339,7 +317,6 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
           </div>
         </div>
 
-        {/* Estrelas — clique salva automaticamente */}
         <div>
           <p className="text-2xs text-ink-muted uppercase tracking-widest mb-2">Nota</p>
           <StarRating
@@ -351,7 +328,6 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
           />
         </div>
 
-        {/* Comentário */}
         {canGrade && (
           <div className="flex gap-2 items-start mt-auto">
             <input
@@ -374,7 +350,6 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
           </div>
         )}
 
-        {/* Estado de salvamento / desavaliar */}
         {saving ? (
           <p className="text-2xs text-ink-muted font-mono">salvando…</p>
         ) : score != null && canGrade && (
@@ -392,7 +367,6 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
   );
 }
 
-// ── Paginação ──────────────────────────────────────────────────────────────────
 function Pagination({ page, totalPages, onChange, totalVisible, totalAll }) {
   if (totalPages <= 1 && page === 0) return null;
 
@@ -428,7 +402,6 @@ function Pagination({ page, totalPages, onChange, totalVisible, totalAll }) {
   );
 }
 
-// ── Página principal ───────────────────────────────────────────────────────────
 export default function Teacher() {
   const [photos, setPhotos]   = useState([]);
   const [loading, setLoading] = useState(true);
@@ -558,14 +531,12 @@ export default function Teacher() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
 
-        {/* Banner de fase */}
         {phase && phase !== 'evaluation' && PHASE_BANNER[phase] && (
           <div className={`text-xs mb-6 px-3 py-2.5 border rounded-sm enter-1 ${PHASE_BANNER[phase].cls}`}>
             {PHASE_BANNER[phase].text}
           </div>
         )}
 
-        {/* Cabeçalho */}
         <div className="flex items-end justify-between mb-8 flex-wrap gap-5 enter-1">
           <div>
             <p className="text-2xs text-ink-muted uppercase tracking-widest mb-3">Júri</p>
@@ -574,7 +545,6 @@ export default function Teacher() {
             </h1>
           </div>
 
-          {/* Filtros */}
           <div className="flex items-center bg-surface border border-line rounded-sm p-1 gap-0.5 enter-2">
             {[
               ['pending', 'Pendentes'],
@@ -594,7 +564,6 @@ export default function Teacher() {
           </div>
         </div>
 
-        {/* Progresso */}
         <div className="mb-8 enter-2">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-ink-secondary">
@@ -611,7 +580,6 @@ export default function Teacher() {
           </div>
         </div>
 
-        {/* Grid de fotos */}
         {filtered.length === 0 ? (
           <div className="text-center py-24 enter-3">
             <p className="font-display text-5xl italic text-ink-ghost/20 mb-3" style={{ letterSpacing: '-0.03em' }}>—</p>
