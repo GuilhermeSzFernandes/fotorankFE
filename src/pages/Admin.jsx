@@ -91,9 +91,9 @@ function PhotoModal({ photo, onClose }) {
 
 const PHASE_META = {
   waiting:      { label: 'Aguardando início',       color: 'text-ink-muted',    border: 'border-line',            bg: 'bg-surface' },
-  registration: { label: 'Inscrições abertas',      color: 'text-blue-400',     border: 'border-blue-900/40',     bg: 'bg-blue-900/5' },
-  evaluation:   { label: 'Avaliação em andamento',  color: 'text-amber-400',    border: 'border-amber-900/40',    bg: 'bg-amber-900/5' },
-  closed:       { label: 'Concurso encerrado',      color: 'text-green-500',    border: 'border-green-900/40',    bg: 'bg-green-900/5' },
+  registration: { label: 'Inscrições abertas',      color: 'text-info',     border: 'border-info-border',     bg: 'bg-info-bg' },
+  evaluation:   { label: 'Avaliação em andamento',  color: 'text-warning',    border: 'border-warning-border',    bg: 'bg-warning-bg' },
+  closed:       { label: 'Concurso encerrado',      color: 'text-success',    border: 'border-success-border',     bg: 'bg-success-bg' },
 };
 
 function PhaseSwitch({ current, override, onSet, loading }) {
@@ -120,7 +120,7 @@ function PhaseSwitch({ current, override, onSet, loading }) {
       </div>
 
       {override && (
-        <div className="text-2xs font-mono text-amber-400/70 px-3 py-1.5 border border-amber-900/30 rounded-sm bg-amber-900/5">
+        <div className="text-2xs font-mono text-warning px-3 py-1.5 border border-warning-border rounded-sm bg-warning-bg">
           Fase definida manualmente — datas ignoradas
         </div>
       )}
@@ -408,8 +408,8 @@ export default function Admin() {
 
       {(error || success) && (
         <div className={`text-xs mb-8 px-3 py-2.5 border rounded-sm enter-1 ${
-          error ? 'text-red-400/80 border-red-900/30 bg-red-900/5'
-                : 'text-green-500/80 border-green-900/30 bg-green-900/5'
+          error ? 'text-danger border-danger-border bg-danger-bg'
+                : 'text-success border-success-border bg-success-bg'
         }`}>
           {error || success}
         </div>
@@ -451,7 +451,7 @@ export default function Admin() {
                 onClick={handleToggleRankingPublic}
                 disabled={contestLoading}
                 className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:opacity-50 ${
-                  contest.config?.ranking_public ? 'bg-green-500' : 'bg-surface-raised'
+                  contest.config?.ranking_public ? 'bg-success' : 'bg-surface-raised'
                 }`}
                 role="switch"
                 aria-checked={contest.config?.ranking_public ?? false}
@@ -609,7 +609,7 @@ export default function Admin() {
                   <div className="group flex items-center gap-1.5">
                     <button
                       onClick={() => setModalPhoto(photo)}
-                      className={`font-mono text-2xs break-all text-left transition-colors hover:underline underline-offset-2 ${copiedId === photo.id ? 'text-green-400' : 'text-ink-secondary hover:text-ink'}`}
+                      className={`font-mono text-2xs break-all text-left transition-colors hover:underline underline-offset-2 ${copiedId === photo.id ? 'text-success' : 'text-ink-secondary hover:text-ink'}`}
                       title="Ver foto"
                     >
                       {photo.id}
@@ -620,7 +620,7 @@ export default function Admin() {
                       title="Copiar UUID"
                     >
                       {copiedId === photo.id ? (
-                        <svg className="text-green-400" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <svg className="text-success" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
                       ) : (

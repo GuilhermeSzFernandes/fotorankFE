@@ -83,7 +83,7 @@ function PhotoCard({ photo, index }) {
             <span className="text-2xs text-ink-ghost/40 font-mono">aguardando avaliação</span>
           </div>
         ) : (
-          <div className="px-4 py-3 border-t border-amber-500/25 bg-amber-500/5">
+          <div className="px-4 py-3 border-t border-warning-border bg-warning-bg">
             <div className="flex items-baseline justify-between mb-1">
               <div className="flex items-baseline gap-1">
                 <span className="font-display text-3xl italic text-ink leading-none" style={{ letterSpacing: '-0.03em' }}>
@@ -97,10 +97,10 @@ function PhotoCard({ photo, index }) {
             </div>
 
             {comments.length > 0 && (
-              <div className="space-y-1.5 mt-2 pt-2 border-t border-amber-500/20">
+              <div className="space-y-1.5 mt-2 pt-2 border-t border-warning-border">
                 {comments.map((f, j) => (
                   <div key={j} className="flex gap-2">
-                    <span className="text-2xs text-amber-400/70 font-mono shrink-0 mt-0.5">{f.score}·</span>
+                    <span className="text-2xs text-warning font-mono shrink-0 mt-0.5">{f.score}·</span>
                     <p className="text-2xs text-ink-secondary leading-relaxed">{f.comment}</p>
                   </div>
                 ))}
@@ -135,7 +135,7 @@ export default function UserProfile() {
   }, [navigate]);
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-48px)] text-ink-muted text-xs font-mono">
+    <div className="flex items-center justify-center min-h-[calc(100vh-3.5rem)] text-ink-muted text-xs font-mono">
       carregando…
     </div>
   );

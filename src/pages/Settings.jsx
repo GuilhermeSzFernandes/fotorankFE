@@ -169,8 +169,8 @@ export default function Settings() {
           {(profileMsg || profileError) && (
             <div className={`text-xs mb-5 px-3 py-2.5 border rounded-sm ${
               profileError
-                ? 'text-red-400/80 border-red-900/30 bg-red-900/5'
-                : 'text-green-500/80 border-green-900/30 bg-green-900/5'
+                ? 'text-danger border-danger-border bg-danger-bg'
+                : 'text-success border-success-border bg-success-bg'
             }`}>
               {profileMsg || profileError}
             </div>
@@ -220,8 +220,8 @@ export default function Settings() {
           {(pwMsg || pwError) && (
             <div className={`text-xs mb-5 px-3 py-2.5 border rounded-sm ${
               pwError
-                ? 'text-red-400/80 border-red-900/30 bg-red-900/5'
-                : 'text-green-500/80 border-green-900/30 bg-green-900/5'
+                ? 'text-danger border-danger-border bg-danger-bg'
+                : 'text-success border-success-border bg-success-bg'
             }`}>
               {pwMsg || pwError}
             </div>

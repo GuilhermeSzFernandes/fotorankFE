@@ -29,7 +29,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-48px)] flex items-center justify-center px-4">
+    <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center px-4">
       <div className="w-full max-w-xs">
 
         <div className="mb-10 enter-1">
@@ -41,7 +41,7 @@ export default function Login() {
         </div>
 
         {error && (
-          <div className="enter-2 text-red-400/80 text-xs mb-5 px-3 py-2.5 border border-red-900/30 rounded-sm bg-red-900/5">
+          <div className="enter-2 text-danger text-xs mb-5 px-3 py-2.5 border border-danger-border rounded-sm bg-danger-bg">
             {error}
           </div>
         )}

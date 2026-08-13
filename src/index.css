@@ -15,15 +15,31 @@
   --ink-secondary:  120 120 120;
   --ink-muted:      72  72  72;
   --ink-ghost:      40  40  40;
+  --danger:         248 113 113;
+  --danger-bg:      24  13  13;
+  --danger-border:  62  24  24;
+  --success:        74  222 128;
+  --success-bg:     13  26  18;
+  --success-border: 20  66  40;
+  --warning:        251 191 36;
+  --warning-bg:     28  22  10;
+  --warning-border: 74  51  12;
+  --info:           96  165 250;
+  --info-bg:        13  20  32;
+  --info-border:    30  48  74;
 }
 
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
-  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 118.75%; /* 19px — escala todo o app (rem), textos e componentes maiores sem precisar de zoom */
+  }
 
   body {
     @apply bg-base text-ink font-sans;
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.65;
     transition: background-color 0.2s ease, color 0.2s ease;
   }
@@ -62,22 +78,22 @@
     @apply btn text-ink-secondary hover:text-ink px-3 py-1.5 text-xs rounded-sm;
   }
   .btn-danger {
-    @apply btn border border-red-900/40 text-red-500/70 hover:text-red-400 hover:border-red-800/60
+    @apply btn border border-danger-border text-danger hover:bg-danger-bg
            px-3 py-1.5 text-xs rounded-sm;
   }
 
   /* ── Fields ── */
   .field {
-    @apply w-full bg-surface border border-line rounded-sm px-3 py-2.5
-           text-ink placeholder-ink-ghost text-xs
-           focus:outline-none focus:border-line-strong transition-colors duration-150;
+    @apply w-full bg-surface-high border border-line-strong rounded-sm px-3 py-2.5
+           text-ink placeholder-ink-muted text-xs
+           focus:outline-none focus:border-ink transition-colors duration-150;
   }
   select.field option {
     background-color: rgb(var(--surface));
     color: rgb(var(--ink));
   }
   .flabel {
-    @apply block text-2xs text-ink-muted uppercase mb-2;
+    @apply block text-2xs text-ink-secondary font-medium uppercase mb-2;
   }
 
   /* ── Panels ── */
@@ -87,8 +103,8 @@
   /* ── Chips ── */
   .chip         { @apply inline-flex items-center rounded-sm px-2 py-0.5 text-2xs font-medium; }
   .chip-default { @apply chip border border-line-strong text-ink-secondary; }
-  .chip-green   { @apply chip border border-green-900/40 text-green-600; }
-  .chip-red     { @apply chip border border-red-900/40 text-red-500; }
+  .chip-green   { @apply chip border border-success-border text-success; }
+  .chip-red     { @apply chip border border-danger-border text-danger; }
 
   /* ── Staggered entrance ── */
   .enter-1 { animation: fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) 0ms   both; }

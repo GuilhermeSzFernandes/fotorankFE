@@ -236,7 +236,7 @@ export default function Ranking() {
   const pageEntries = byPhoto.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
   return (
-    <div className="max-w-2xl mx-auto px-6 py-14">
+    <div className="max-w-2xl mx-auto px-6 pb-14">
       {modalEntry && (
         <PhotoModal entry={modalEntry} onClose={() => setModalEntry(null)} />
       )}

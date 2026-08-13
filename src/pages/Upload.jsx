@@ -4,8 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 
 const PHASE_BANNER = {
   waiting:    { text: 'As inscrições ainda não foram abertas.',               cls: 'text-ink-muted border-line bg-surface' },
-  evaluation: { text: 'O período de inscrições foi encerrado. Suas fotos estão em avaliação.', cls: 'text-amber-400/80 border-amber-900/30 bg-amber-900/5' },
-  closed:     { text: 'O concurso foi encerrado.',                            cls: 'text-green-500/80 border-green-900/30 bg-green-900/5' },
+  evaluation: { text: 'O período de inscrições foi encerrado. Suas fotos estão em avaliação.', cls: 'text-warning border-warning-border bg-warning-bg' },
+  closed:     { text: 'O concurso foi encerrado.',                            cls: 'text-success border-success-border bg-success-bg' },
 };
 
 function FullscreenModal({ photo, onClose }) {
@@ -183,7 +183,7 @@ function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemov
             onClick={(e) => { e.stopPropagation(); onDeletePhoto(photo.id); }}
             className="absolute top-2 right-2 w-7 h-7 rounded-full bg-base/80 border border-line flex items-center justify-center text-ink-muted
                        opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200
-                       hover:text-red-400 hover:border-red-900/60 active:scale-95"
+                       hover:text-danger hover:border-danger-border active:scale-95"
             title="Remover foto"
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -221,7 +221,7 @@ function GallerySlot({ photo, pending, uploading, uploadingThis, onFile, onRemov
           <div className="absolute inset-x-0 bottom-0 flex items-center gap-1.5 px-2 py-1.5 bg-base/70 pointer-events-none">
             {hasDetails ? (
               <>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-500/90 shrink-0">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-success shrink-0">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
                 <span className="text-2xs text-ink-secondary font-mono truncate">detalhes</span>
@@ -465,12 +465,12 @@ export default function Upload() {
       )}
 
       {error && (
-        <div className="text-red-400/80 text-xs mb-6 px-3 py-2.5 border border-red-900/30 rounded-sm bg-red-900/5 enter-1">
+        <div className="text-danger text-xs mb-6 px-3 py-2.5 border border-danger-border rounded-sm bg-danger-bg enter-1">
           {error}
         </div>
       )}
       {success && (
-        <div className="text-green-500/80 text-xs mb-6 px-3 py-2.5 border border-green-900/30 rounded-sm bg-green-900/5 enter-1">
+        <div className="text-success text-xs mb-6 px-3 py-2.5 border border-success-border rounded-sm bg-success-bg enter-1">
           {success}
         </div>
       )}

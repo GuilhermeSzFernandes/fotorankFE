@@ -5,8 +5,8 @@ import Avatar from '../components/Avatar';
 
 const PHASE_BANNER = {
   waiting:      { text: 'As inscrições ainda não foram abertas. A avaliação começa após o encerramento das inscrições.', cls: 'text-ink-muted border-line bg-surface' },
-  registration: { text: 'Período de inscrições em andamento. A avaliação de fotos ainda não está liberada.',             cls: 'text-blue-400/80 border-blue-900/30 bg-blue-900/5' },
-  closed:       { text: 'O concurso foi encerrado. Não é mais possível alterar avaliações.',                             cls: 'text-green-500/80 border-green-900/30 bg-green-900/5' },
+  registration: { text: 'Período de inscrições em andamento. A avaliação de fotos ainda não está liberada.',             cls: 'text-info border-info-border bg-info-bg' },
+  closed:       { text: 'O concurso foi encerrado. Não é mais possível alterar avaliações.',                             cls: 'text-success border-success-border bg-success-bg' },
 };
 
 const LOCKED_MESSAGE = {
@@ -33,7 +33,7 @@ function StarRating({ score, onChange, disabled, locked, lockedMessage }) {
             onMouseLeave={() => setHover(null)}
             onClick={() => onChange(star)}
             className={`transition-all duration-75 disabled:opacity-50 ${
-              star <= display ? 'text-amber-400' : 'text-ink-muted/50 hover:text-amber-300'
+              star <= display ? 'text-warning' : 'text-ink-muted/50 hover:text-warning'
             } hover:scale-110 active:scale-95`}
             title={locked ? lockedMessage : `${star} ponto${star !== 1 ? 's' : ''}`}
           >
@@ -45,14 +45,14 @@ function StarRating({ score, onChange, disabled, locked, lockedMessage }) {
           </button>
         ))}
         <span className={`ml-3 font-display italic text-2xl tabular-nums leading-none transition-colors duration-75 ${
-          hover != null ? 'text-amber-400' : score != null ? 'text-ink' : 'text-ink-ghost/25'
+          hover != null ? 'text-warning' : score != null ? 'text-ink' : 'text-ink-ghost/25'
         }`} style={{ letterSpacing: '-0.02em' }}>
           {hover ?? score ?? '—'}
           <span className="text-xs text-ink-muted not-italic font-mono">/10</span>
         </span>
       </div>
       {locked && (
-        <p className="mt-2 flex items-center gap-1.5 text-2xs text-amber-400/90 font-mono">
+        <p className="mt-2 flex items-center gap-1.5 text-2xs text-warning font-mono">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="13" />
@@ -129,7 +129,7 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
       <button
         onClick={(e) => { e.stopPropagation(); next(); }}
         disabled={idx === photos.length - 1}
-        className="absolute right-[316px] top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors disabled:opacity-20 sm:right-[336px]"
+        className="absolute right-[19.75rem] top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors disabled:opacity-20 sm:right-[21rem]"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="9 18 15 12 9 6" />
@@ -237,14 +237,14 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
           {/* Indicador de salvo + desavaliar */}
           {score != null && !saving[photo.id] && (
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-2xs text-amber-400/70 font-mono">
-                <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              <div className="flex items-center gap-2 text-2xs text-warning font-mono">
+                <div className="w-1.5 h-1.5 rounded-full bg-warning" />
                 avaliada · {score}/10
               </div>
               {canGrade && (
                 <button
                   onClick={() => onUngrade(photo.id)}
-                  className="text-2xs text-ink-muted hover:text-red-400 font-mono transition-colors"
+                  className="text-2xs text-ink-muted hover:text-danger font-mono transition-colors"
                   title="Remover avaliação"
                 >
                   desavaliar
@@ -287,7 +287,7 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
     <div
       className={`flex flex-col rounded-sm border overflow-hidden transition-colors duration-200 ${
         graded
-          ? 'border-amber-500/30 bg-surface'
+          ? 'border-warning-border bg-surface'
           : 'border-line bg-surface'
       }`}
       style={{ animation: `fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) ${index * 70}ms both` }}
@@ -306,8 +306,8 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
 
         {/* Badge de nota salva */}
         {graded && (
-          <div className="absolute top-2.5 right-2.5 bg-base/85 border border-amber-500/30 rounded-sm px-2 py-0.5">
-            <span className="font-mono text-xs text-amber-400 tabular-nums">{score}<span className="text-ink-muted">/10</span></span>
+          <div className="absolute top-2.5 right-2.5 bg-base/85 border border-warning-border rounded-sm px-2 py-0.5">
+            <span className="font-mono text-xs text-warning tabular-nums">{score}<span className="text-ink-muted">/10</span></span>
           </div>
         )}
 
@@ -325,7 +325,7 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
 
         {/* Indicador "avaliada" */}
         {graded && (
-          <div className="absolute top-2.5 left-2.5 w-2 h-2 rounded-full bg-amber-400" title="Avaliada" />
+          <div className="absolute top-2.5 left-2.5 w-2 h-2 rounded-full bg-warning" title="Avaliada" />
         )}
       </div>
 
@@ -381,7 +381,7 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
           <div className="flex justify-end">
             <button
               onClick={() => onUngrade(photo.id)}
-              className="text-2xs text-ink-muted hover:text-red-400 font-mono transition-colors"
+              className="text-2xs text-ink-muted hover:text-danger font-mono transition-colors"
             >
               desavaliar
             </button>
@@ -531,7 +531,7 @@ export default function Teacher() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-48px)] text-ink-muted text-xs font-mono">
+      <div className="flex items-center justify-center min-h-[calc(100vh-3.5rem)] text-ink-muted text-xs font-mono">
         carregando…
       </div>
     );
@@ -605,7 +605,7 @@ export default function Teacher() {
           </div>
           <div className="w-full h-1 bg-surface-raised rounded-full overflow-hidden">
             <div
-              className="h-1 bg-amber-400/70 rounded-full transition-all duration-700 ease-out"
+              className="h-1 bg-warning rounded-full transition-all duration-700 ease-out"
               style={{ width: `${progressPct}%` }}
             />
           </div>
