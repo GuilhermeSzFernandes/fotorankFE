@@ -344,6 +344,7 @@ export default function Upload() {
         if (prev[slotIndex]) URL.revokeObjectURL(prev[slotIndex].previewUrl);
         return { ...prev, [slotIndex]: { file, previewUrl, location: '', equipment: '', description: '' } };
       });
+      setDetailsSlot(slotIndex);
       if (fileRefs[slotIndex].current) fileRefs[slotIndex].current.value = '';
     };
     img.onerror = () => {
