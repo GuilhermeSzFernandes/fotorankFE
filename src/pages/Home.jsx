@@ -62,9 +62,10 @@ export default function Home() {
           Mostre, através do seu olhar, a beleza, a cultura, as pessoas e os lugares que fazem de{' '}
           <span className="text-ink font-medium">Carapicuíba</span> um lugar único.
         </p>
-        <div className="flex items-center gap-3 justify-center sm:justify-start enter-4">
+        <div className="flex items-center gap-3 flex-wrap justify-center sm:justify-start enter-4">
           <Link to="/register" className="btn-primary">Inscrever-se</Link>
           <a href="#detalhes" className="btn-outline">Ver detalhes</a>
+          <a href="/regulamento.pdf" target="_blank" rel="noopener noreferrer" className="btn-outline">Ler regulamento</a>
         </div>
       </section>
 
