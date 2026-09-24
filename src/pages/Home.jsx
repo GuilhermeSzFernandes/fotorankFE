@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 const INFO = [
   {
     label: 'Inscrições',
-    detail: 'De 14/08 a 30/09/2026',
+    detail: 'De 14/08 a 11/10/2026',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <rect x="3" y="4" width="18" height="18" rx="2" />
