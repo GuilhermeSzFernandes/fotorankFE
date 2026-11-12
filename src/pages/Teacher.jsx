@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import Avatar from '../components/Avatar';
@@ -14,8 +14,6 @@ const LOCKED_MESSAGE = {
   registration: 'Inscrições em andamento — avaliação ainda não liberada',
   closed:       'Concurso encerrado — avaliação bloqueada',
 };
-
-const PER_PAGE = 3;
 
 function StarRating({ score, onChange, disabled, locked, lockedMessage }) {
   const [hover, setHover] = useState(null);
@@ -367,11 +365,28 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
   );
 }
 
-function Pagination({ page, totalPages, onChange, totalVisible, totalAll }) {
-  if (totalPages <= 1 && page === 0) return null;
+function groupByParticipant(photos) {
+  const map = new Map();
+  photos.forEach((p) => {
+    if (!map.has(p.userId)) {
+      map.set(p.userId, { userId: p.userId, name: p.ownerName, avatar: p.ownerAvatar, photos: [] });
+    }
+    map.get(p.userId).photos.push(p);
+  });
+  return [...map.values()];
+}
+
+function matchesFilter(group, filter) {
+  if (filter === 'all') return true;
+  const pending = group.photos.some((p) => !p.myGrade);
+  return filter === 'pending' ? pending : !pending;
+}
+
+function ParticipantNav({ page, total, groups, onChange, totalAll }) {
+  if (total === 0) return null;
 
   return (
-    <div className="flex items-center justify-between mt-6">
+    <div className="flex items-center justify-between gap-3 mt-6 flex-wrap">
       <button
         onClick={() => onChange(page - 1)}
         disabled={page === 0}
@@ -383,17 +398,34 @@ function Pagination({ page, totalPages, onChange, totalVisible, totalAll }) {
         Anterior
       </button>
 
-      <span className="text-2xs text-ink-muted font-mono">
-        {page * PER_PAGE + 1}–{Math.min((page + 1) * PER_PAGE, totalVisible)} de {totalVisible}
-        {totalVisible !== totalAll && <span className="text-ink-ghost/50"> ({totalAll} total)</span>}
-      </span>
+      <div className="flex items-center gap-2 min-w-0">
+        <select
+          value={page}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="field py-1.5 text-xs max-w-[14rem]"
+          aria-label="Ir para participante"
+        >
+          {groups.map((g, i) => {
+            const done = g.photos.every((p) => p.myGrade);
+            return (
+              <option key={g.userId} value={i}>
+                {i + 1}. {g.name}{done ? ' ✓' : ''}
+              </option>
+            );
+          })}
+        </select>
+        <span className="text-2xs text-ink-muted font-mono whitespace-nowrap">
+          de {total}
+          {total !== totalAll && <span className="text-ink-ghost/50"> ({totalAll} total)</span>}
+        </span>
+      </div>
 
       <button
         onClick={() => onChange(page + 1)}
-        disabled={page >= totalPages - 1}
+        disabled={page >= total - 1}
         className="btn-ghost disabled:opacity-30"
       >
-        Próximas
+        Próximo
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="9 18 15 12 9 6" />
         </svg>
@@ -412,6 +444,9 @@ export default function Teacher() {
   const [page, setPage]       = useState(0);
   const [lightboxIdx, setLightboxIdx] = useState(null);
   const [phase, setPhase] = useState(null);
+  // Lista de participantes do filtro atual. Fica "congelada" enquanto o professor avalia,
+  // para que o participante não suma da tela ao receber a última nota.
+  const [listIds, setListIds] = useState([]);
 
   const canGrade = phase === 'evaluation';
 
@@ -423,6 +458,7 @@ export default function Teacher() {
       ]);
       const data = gradesRes.data;
       setPhotos(data);
+      setListIds(groupByParticipant(data).filter((g) => matchesFilter(g, filter)).map((g) => g.userId));
       setPhase(contestRes.data.phase);
       const s = {};
       const c = {};
@@ -485,22 +521,30 @@ export default function Teacher() {
     }
   }
 
+  const allGroups = useMemo(() => groupByParticipant(photos), [photos]);
+
   function handleFilterChange(f) {
     setFilter(f);
+    setListIds(allGroups.filter((g) => matchesFilter(g, f)).map((g) => g.userId));
     setPage(0);
+  }
+
+  function goToPage(p) {
+    setPage(p);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   const graded = photos.filter((p) => p.myGrade).length;
 
-  const filtered = photos.filter((p) =>
-    filter === 'all'     ? true :
-    filter === 'pending' ? !p.myGrade :
-                           !!p.myGrade
-  );
+  const groups = listIds
+    .map((id) => allGroups.find((g) => g.userId === id))
+    .filter(Boolean);
 
-  const totalPages  = Math.ceil(filtered.length / PER_PAGE);
-  const pagePhotos  = filtered.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
+  const current     = groups[Math.min(page, groups.length - 1)] ?? null;
+  const pagePhotos  = current?.photos ?? [];
+  const pageGraded  = pagePhotos.filter((p) => p.myGrade).length;
   const progressPct = photos.length > 0 ? (graded / photos.length) * 100 : 0;
+  const participantsDone = allGroups.filter((g) => g.photos.every((p) => p.myGrade)).length;
 
   if (loading) {
     return (
@@ -514,7 +558,7 @@ export default function Teacher() {
     <>
       {lightboxIdx !== null && (
         <Lightbox
-          photos={filtered}
+          photos={pagePhotos}
           initialIndex={lightboxIdx}
           scores={scores}
           comments={comments}
@@ -569,6 +613,10 @@ export default function Teacher() {
             <span className="text-xs text-ink-secondary">
               <span className="font-mono text-ink">{graded}</span> de{' '}
               <span className="font-mono">{photos.length}</span> fotos avaliadas
+              <span className="text-ink-muted">
+                {' · '}<span className="font-mono">{participantsDone}</span> de{' '}
+                <span className="font-mono">{allGroups.length}</span> participantes concluídos
+              </span>
             </span>
             <span className="text-xs text-ink-muted font-mono">{Math.round(progressPct)}%</span>
           </div>
@@ -580,16 +628,31 @@ export default function Teacher() {
           </div>
         </div>
 
-        {filtered.length === 0 ? (
+        {!current ? (
           <div className="text-center py-24 enter-3">
             <p className="font-display text-5xl italic text-ink-ghost/20 mb-3" style={{ letterSpacing: '-0.03em' }}>—</p>
             <p className="text-xs text-ink-muted font-mono">
-              {filter === 'pending' ? 'todas as fotos já foram avaliadas' : 'nenhuma foto encontrada'}
+              {filter === 'pending' ? 'todos os participantes já foram avaliados' : 'nenhum participante encontrado'}
             </p>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 enter-3">
+            <div key={current.userId} className="flex items-center justify-between gap-4 mb-5 pb-4 border-b border-line flex-wrap enter-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <Avatar name={current.name} avatar={current.avatar} size="md" />
+                <div className="min-w-0">
+                  <p className="text-2xs text-ink-muted uppercase tracking-widest mb-0.5">
+                    Participante {Math.min(page, groups.length - 1) + 1} de {groups.length}
+                  </p>
+                  <p className="text-lg font-medium text-ink truncate">{current.name}</p>
+                </div>
+              </div>
+              <span className={`text-xs font-mono ${pageGraded === pagePhotos.length ? 'text-warning' : 'text-ink-muted'}`}>
+                {pageGraded}/{pagePhotos.length} {pagePhotos.length === 1 ? 'foto avaliada' : 'fotos avaliadas'}
+              </span>
+            </div>
+
+            <div key={`grid-${current.userId}`} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {pagePhotos.map((photo, i) => (
                 <PhotoCard
                   key={photo.id}
@@ -602,19 +665,19 @@ export default function Teacher() {
                   onCommentChange={handleCommentChange}
                   onCommentSave={handleCommentSave}
                   onUngrade={handleUngrade}
-                  onExpand={(p) => setLightboxIdx(filtered.findIndex((f) => f.id === p.id))}
+                  onExpand={(p) => setLightboxIdx(pagePhotos.findIndex((f) => f.id === p.id))}
                   canGrade={canGrade}
                   phase={phase}
                 />
               ))}
             </div>
 
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              onChange={setPage}
-              totalVisible={filtered.length}
-              totalAll={photos.length}
+            <ParticipantNav
+              page={Math.min(page, groups.length - 1)}
+              total={groups.length}
+              groups={groups}
+              onChange={goToPage}
+              totalAll={allGroups.length}
             />
           </>
         )}
