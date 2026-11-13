@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import Avatar from '../components/Avatar';
 
 const PHASE_BANNER = {
   waiting:      { text: 'As inscrições ainda não foram abertas. A avaliação começa após o encerramento das inscrições.', cls: 'text-ink-muted border-line bg-surface' },
@@ -135,7 +134,7 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
         <img
           key={photo.id}
           src={photo.url}
-          alt={photo.originalName}
+          alt={`Foto do participante ${photo.participantNumber}`}
           className="max-w-full max-h-[90vh] object-contain rounded-sm shadow-2xl"
         />
       </div>
@@ -157,12 +156,7 @@ function Lightbox({ photos, initialIndex, scores, comments, saving, onScoreChang
         </div>
 
         <div className="flex flex-col gap-5 p-5 flex-1">
-          <div className="flex items-center gap-2.5">
-            <Avatar name={photo.ownerName} avatar={photo.ownerAvatar} size="md" />
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-ink truncate">{photo.ownerName}</p>
-            </div>
-          </div>
+          <p className="text-sm font-medium text-ink">Participante {photo.participantNumber}</p>
 
           {(photo.location || photo.equipment || photo.description) && (
             <div className="flex flex-col gap-3 pb-1 border-b border-white/10">
@@ -281,7 +275,7 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
       >
         <img
           src={photo.url}
-          alt={photo.originalName}
+          alt={`Foto do participante ${photo.participantNumber}`}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
         />
 
@@ -308,13 +302,6 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
       </div>
 
       <div className="p-4 flex flex-col gap-3 flex-1">
-        <div className="flex items-center gap-2.5">
-          <Avatar name={photo.ownerName} avatar={photo.ownerAvatar} size="sm" />
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-ink truncate">{photo.ownerName}</p>
-          </div>
-        </div>
-
         <div>
           <p className="text-2xs text-ink-muted uppercase tracking-widest mb-2">Nota</p>
           <StarRating
@@ -368,10 +355,10 @@ function PhotoCard({ photo, score, comment, saving, onScoreChange, onCommentChan
 function groupByParticipant(photos) {
   const map = new Map();
   photos.forEach((p) => {
-    if (!map.has(p.userId)) {
-      map.set(p.userId, { userId: p.userId, name: p.ownerName, avatar: p.ownerAvatar, photos: [] });
+    if (!map.has(p.participantId)) {
+      map.set(p.participantId, { participantId: p.participantId, number: p.participantNumber, photos: [] });
     }
-    map.get(p.userId).photos.push(p);
+    map.get(p.participantId).photos.push(p);
   });
   return [...map.values()];
 }
@@ -408,8 +395,8 @@ function ParticipantNav({ page, total, groups, onChange, totalAll }) {
           {groups.map((g, i) => {
             const done = g.photos.every((p) => p.myGrade);
             return (
-              <option key={g.userId} value={i}>
-                {i + 1}. {g.name}{done ? ' ✓' : ''}
+              <option key={g.participantId} value={i}>
+                Participante {g.number}{done ? ' ✓' : ''}
               </option>
             );
           })}
@@ -458,7 +445,7 @@ export default function Teacher() {
       ]);
       const data = gradesRes.data;
       setPhotos(data);
-      setListIds(groupByParticipant(data).filter((g) => matchesFilter(g, filter)).map((g) => g.userId));
+      setListIds(groupByParticipant(data).filter((g) => matchesFilter(g, filter)).map((g) => g.participantId));
       setPhase(contestRes.data.phase);
       const s = {};
       const c = {};
@@ -525,7 +512,7 @@ export default function Teacher() {
 
   function handleFilterChange(f) {
     setFilter(f);
-    setListIds(allGroups.filter((g) => matchesFilter(g, f)).map((g) => g.userId));
+    setListIds(allGroups.filter((g) => matchesFilter(g, f)).map((g) => g.participantId));
     setPage(0);
   }
 
@@ -537,7 +524,7 @@ export default function Teacher() {
   const graded = photos.filter((p) => p.myGrade).length;
 
   const groups = listIds
-    .map((id) => allGroups.find((g) => g.userId === id))
+    .map((id) => allGroups.find((g) => g.participantId === id))
     .filter(Boolean);
 
   const current     = groups[Math.min(page, groups.length - 1)] ?? null;
@@ -637,22 +624,19 @@ export default function Teacher() {
           </div>
         ) : (
           <>
-            <div key={current.userId} className="flex items-center justify-between gap-4 mb-5 pb-4 border-b border-line flex-wrap enter-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <Avatar name={current.name} avatar={current.avatar} size="md" />
-                <div className="min-w-0">
-                  <p className="text-2xs text-ink-muted uppercase tracking-widest mb-0.5">
-                    Participante {Math.min(page, groups.length - 1) + 1} de {groups.length}
-                  </p>
-                  <p className="text-lg font-medium text-ink truncate">{current.name}</p>
-                </div>
+            <div key={current.participantId} className="flex items-center justify-between gap-4 mb-5 pb-4 border-b border-line flex-wrap enter-3">
+              <div className="min-w-0">
+                <p className="text-2xs text-ink-muted uppercase tracking-widest mb-0.5">
+                  {Math.min(page, groups.length - 1) + 1} de {groups.length} na lista
+                </p>
+                <p className="text-lg font-medium text-ink truncate">Participante {current.number}</p>
               </div>
               <span className={`text-xs font-mono ${pageGraded === pagePhotos.length ? 'text-warning' : 'text-ink-muted'}`}>
                 {pageGraded}/{pagePhotos.length} {pagePhotos.length === 1 ? 'foto avaliada' : 'fotos avaliadas'}
               </span>
             </div>
 
-            <div key={`grid-${current.userId}`} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div key={`grid-${current.participantId}`} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {pagePhotos.map((photo, i) => (
                 <PhotoCard
                   key={photo.id}

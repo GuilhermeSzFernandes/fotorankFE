@@ -54,14 +54,14 @@ export default function Navbar() {
 
   function handleLogout() { logout(); navigate('/login'); }
 
-  const canSeeRanking = ['admin', 'teacher'].includes(user?.role) || rankingVisible;
+  const canSeeRanking = user?.role === 'admin' || rankingVisible;
 
   const links = !user
     ? (canSeeRanking ? [{ to: '/ranking', label: 'Ranking' }] : [])
     : user.role === 'participant'
     ? [{ to: '/upload', label: 'Envios' }, ...(canSeeRanking ? [{ to: '/ranking', label: 'Ranking' }] : [])]
     : user.role === 'teacher'
-    ? [{ to: '/teacher', label: 'Avaliação' }, { to: '/ranking', label: 'Ranking' }]
+    ? [{ to: '/teacher', label: 'Avaliação' }, ...(canSeeRanking ? [{ to: '/ranking', label: 'Ranking' }] : [])]
     : [{ to: '/admin', label: 'Admin' }, { to: '/ranking', label: 'Ranking' }];
 
   return (
